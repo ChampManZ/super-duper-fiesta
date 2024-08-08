@@ -9,5 +9,10 @@ import (
 func SetupRoutes(e *echo.Echo) {
 	// Test Health
 	e.GET("/", handlers.HealthCheck)
+
+	// User
 	e.GET("/users", handlers.GetUsers)
+
+	// Swagger
+	e.GET("/swagger/*", handlers.SwaggerHandler)
 }

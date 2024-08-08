@@ -1,0 +1,102 @@
+basePath: /
+definitions:
+  models.Comment:
+    properties:
+      commentID:
+        type: integer
+      commentMSG:
+        type: string
+      createdAt:
+        type: string
+      updatedAt:
+        type: string
+      users:
+        description: Many-to-Many relationship (belongs to) | Many users can have
+          many comments which lead to CommentUser table
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    type: object
+  models.Post:
+    properties:
+      createdAt:
+        type: string
+      message:
+        type: string
+      postID:
+        type: integer
+      updatedAt:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: One-to-One relationship (belongs to) | One post can have one
+          user
+      userID:
+        type: integer
+    type: object
+  models.User:
+    properties:
+      comments:
+        description: Many-to-Many relationship (has many) | One user can have many
+          comments
+        items:
+          $ref: '#/definitions/models.Comment'
+        type: array
+      email:
+        type: string
+      firstname:
+        type: string
+      password:
+        type: string
+      posts:
+        description: One-to-Many relationship (has many) | One user can have many
+          posts
+        items:
+          $ref: '#/definitions/models.Post'
+        type: array
+      surname:
+        type: string
+      userID:
+        type: integer
+      username:
+        type: string
+    type: object
+host: localhost:1323
+info:
+  contact: {}
+  description: This is a simple social feed API for DataWow Take Home Assignment
+  title: Simple Social Feed API
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      description: Check if the server is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Server is running
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - healthcheck
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Get all users
+      tags:
+      - users
+swagger: "2.0"
