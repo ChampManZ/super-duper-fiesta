@@ -13,6 +13,15 @@ func SetupRoutes(e *echo.Echo) {
 	// User
 	e.GET("/users", handlers.GetUsers)
 
+	// Post
+	e.GET("/posts", handlers.GetPosts)
+
+	// Comment
+	e.GET("/comments", handlers.GetComments)
+
+	// CommentUser
+	e.GET("/commentuser", handlers.GetCommentUser)
+
 	// Swagger
 	e.GET("/swagger/*", handlers.SwaggerHandler)
 }

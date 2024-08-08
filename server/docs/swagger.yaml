@@ -17,6 +17,15 @@ definitions:
           $ref: '#/definitions/models.User'
         type: array
     type: object
+  models.CommentUser:
+    properties:
+      commentID:
+        description: Composite primary key
+        type: integer
+      userID:
+        description: Composite primary key
+        type: integer
+    type: object
   models.Post:
     properties:
       createdAt:
@@ -84,6 +93,51 @@ paths:
       summary: Health check
       tags:
       - healthcheck
+  /comments:
+    get:
+      consumes:
+      - application/json
+      description: Get all comments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Comment'
+      summary: Get all comments
+      tags:
+      - comments
+  /commentuser:
+    get:
+      consumes:
+      - application/json
+      description: Get all user comments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CommentUser'
+      summary: Get all user comments
+      tags:
+      - commentUser
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: Get all posts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Post'
+      summary: Get all posts
+      tags:
+      - posts
   /users:
     get:
       consumes:
