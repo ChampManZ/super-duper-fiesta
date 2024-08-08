@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"path/filepath"
 	"server/config"
 	"server/routes"
 
@@ -10,7 +11,8 @@ import (
 )
 
 func init() {
-	err := godotenv.Load()
+	rootDir := filepath.Join("..", ".env")
+	err := godotenv.Load(rootDir)
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
