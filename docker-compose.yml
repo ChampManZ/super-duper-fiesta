@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: gorm123          # Root password
+      MYSQL_DATABASE: dwtakehome            # Your database name
+      MYSQL_USER: thanapateu                # Your MySQL user
+      MYSQL_PASSWORD: gorm123               # MySQL user password
+    ports:
+      - "3306:3306"                         # Map host port 3306 to container port 3306
+    volumes:
+      - mysql_data:/var/lib/mysql           # Persist data between container restarts
+    networks:
+      - mysql_network
+
+volumes:
+  mysql_data:
+
+networks:
+  mysql_network:
