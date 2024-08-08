@@ -1,8 +1,13 @@
-## Take-Home Assignment | Small Social Media
+# Take-Home Assignment | Small Social Media
+Since this project aim to be an assignment test that includes both frontend and backend in the same repository, I will be grateful if a feedback is given about:
+- Best practice on how to organize a folder structure when UI and Server are in the same repository
+
+## Setup
 -
 
-# Setup
+## Run Test
 -
-
-# Run Test
--
+## Versions
+- node v21.7.3
+- npm 9.5.1
+- go version go1.19.1 windows/amd64 (test locally on Windows)
