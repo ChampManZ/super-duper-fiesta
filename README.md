@@ -11,3 +11,6 @@ Since this project aim to be an assignment test that includes both frontend and 
 - node v21.7.3
 - npm 9.5.1
 - go version go1.22.6 windows/amd64 (test locally on Windows)
+
+## Swagger UI
+http://localhost:1323/swagger/index.html#/
