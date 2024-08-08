@@ -3,12 +3,12 @@ package models
 import "time"
 
 type User struct {
-	UserID    uint      `gorm:"primaryKey"`
-	Username  string    `gorm:"unique"`
-	Firstname string    `gorm:"not null"`
-	Surname   string    `gorm:"not null"`
-	Email     string    `gorm:"unique"`
-	Password  string    `gorm:"not null"`
+	UserID    uint      `gorm:"primaryKey" json:"uid"`
+	Username  string    `gorm:"unique" json:"username"`
+	Firstname string    `gorm:"not null" json:"firstname"`
+	Surname   string    `gorm:"not null" json:"surname"`
+	Email     string    `gorm:"unique" json:"email"`
+	Password  string    `gorm:"not null" json:"-"`       // Hide password from JSON response
 	Posts     []Post    `gorm:"foreignKey:UserID"`       // One-to-Many relationship (has many) | One user can have many posts
 	Comments  []Comment `gorm:"many2many:comment_users"` // Many-to-Many relationship (has many) | One user can have many comments
 }
@@ -33,4 +33,12 @@ type Comment struct {
 type CommentUser struct {
 	CommentID uint `gorm:"primaryKey;autoIncrement:false"` // Composite primary key
 	UserID    uint `gorm:"primaryKey;autoIncrement:false"` // Composite primary key
+}
+
+type CreateUserRequest struct {
+	Username  string `json:"username" validate:"required,min=3,max=32"`
+	Firstname string `json:"firstname" validate:"required,min=2,max=32"`
+	Surname   string `json:"surname" validate:"required,min=2,max=32"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required,min=8"`
 }
