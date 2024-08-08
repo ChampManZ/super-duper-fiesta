@@ -1,1 +1,8 @@
-# super-duper-fiesta
+## Take-Home Assignment | Small Social Media
+-
+
+# Setup
+-
+
+# Run Test
+-
