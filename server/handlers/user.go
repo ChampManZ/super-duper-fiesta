@@ -62,6 +62,18 @@ func CreateUser(c echo.Context) error {
 		return err
 	}
 
+	// Check if user info already exists
+	var existingUser models.User
+	if result := config.DB.Where("username = ? OR email = ?", request.Username, request.Email).First(&existingUser); result.Error == nil {
+		if existingUser.Username == request.Username {
+			return c.JSON(http.StatusConflict, map[string]string{"message": "Username already exists"})
+		} else if existingUser.Email == request.Email {
+			return c.JSON(http.StatusConflict, map[string]string{"message": "Email already exists"})
+		} else {
+			return c.JSON(http.StatusConflict, map[string]string{"message": "Failed to create user. Please try again"})
+		}
+	}
+
 	// Hash Password
 	hashedPassword, err := helpers.HashPassword(request.Password)
 	if err != nil {
@@ -78,7 +90,7 @@ func CreateUser(c echo.Context) error {
 	}
 
 	if result := config.DB.Create(&user); result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create user"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Error: Failed to create user. Please try again"})
 	}
 
 	return c.JSON(http.StatusCreated, user)

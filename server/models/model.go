@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"github.com/go-playground/validator/v10"
 )
 
 // GORM Model
@@ -43,22 +41,17 @@ type CommentUser struct {
 // Request Model
 type CreateUserRequest struct {
 	Username  string `json:"username" validate:"required,min=3,max=32"`
-	Firstname string `json:"firstname" validate:"required,min=2,max=32"`
-	Surname   string `json:"surname" validate:"required,min=2,max=32"`
+	Firstname string `json:"firstname" validate:"required"`
+	Surname   string `json:"surname" validate:"required"`
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=8"`
 }
 
 type UpdateUserRequest struct {
 	Username  string `json:"username" validate:"required,min=3,max=32"`
-	Firstname string `json:"firstname" validate:"required,min=2,max=32"`
-	Surname   string `json:"surname" validate:"required,min=2,max=32"`
+	Firstname string `json:"firstname" validate:"required"`
+	Surname   string `json:"surname" validate:"required"`
 	Password  string `json:"password,omitempty" validate:"required,min=8"`
-}
-
-// Helper Model
-type CustomValidator struct {
-	validator *validator.Validate
 }
 
 // TO-DO: https://github.com/qor/validations to validate model at database level
