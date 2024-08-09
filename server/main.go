@@ -4,6 +4,7 @@ import (
 	"log"
 	"path/filepath"
 	"server/config"
+	"server/helpers"
 	"server/routes"
 
 	"github.com/joho/godotenv"
@@ -33,6 +34,9 @@ func main() {
 
 	// Start server
 	e := echo.New()
+
+	// Register Validator for request binding
+	e.Validator = helpers.NewValidator()
 
 	// Middleware
 	e.Use(middleware.Logger())

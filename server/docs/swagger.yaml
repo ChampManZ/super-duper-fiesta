@@ -26,6 +26,32 @@ definitions:
         description: Composite primary key
         type: integer
     type: object
+  models.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      firstname:
+        maxLength: 32
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+      surname:
+        maxLength: 32
+        minLength: 2
+        type: string
+      username:
+        maxLength: 32
+        minLength: 3
+        type: string
+    required:
+    - email
+    - firstname
+    - password
+    - surname
+    - username
+    type: object
   models.Post:
     properties:
       createdAt:
@@ -56,8 +82,6 @@ definitions:
         type: string
       firstname:
         type: string
-      password:
-        type: string
       posts:
         description: One-to-Many relationship (has many) | One user can have many
           posts
@@ -66,7 +90,7 @@ definitions:
         type: array
       surname:
         type: string
-      userID:
+      uid:
         type: integer
       username:
         type: string
@@ -143,6 +167,11 @@ paths:
       consumes:
       - application/json
       description: Get all users
+      parameters:
+      - description: User ID
+        in: query
+        name: userid
+        type: integer
       produces:
       - application/json
       responses:
@@ -150,7 +179,61 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.User'
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to retrieve users
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Get all users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create single user
+      parameters:
+      - description: User object that needs to be created
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Create single user
+      tags:
+      - users
+  /users/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update single user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Update single user
       tags:
       - users
 swagger: "2.0"

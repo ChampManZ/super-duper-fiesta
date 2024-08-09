@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 	"server/config"
+	"server/helpers"
 	"server/models"
-
-	"golang.org/x/crypto/bcrypt"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -16,11 +16,33 @@ import (
 // @Tags users
 // @Accept json
 // @Produce json
+// @Param userid query int false "User ID"
+// @Success 200 {object} []models.User
 // @Success 200 {object} models.User
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Failed to retrieve users"
 // @Router /users [get]
 func GetUsers(c echo.Context) error {
+	userID := c.QueryParam("uid")
+
+	if userID != "" {
+		userID, err := strconv.Atoi(userID)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+		}
+
+		var user models.User
+		if result := config.DB.First(&user, userID); result.Error != nil {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
+		}
+
+		return c.JSON(http.StatusOK, user)
+	}
 	var users []models.User
-	config.DB.Find(&users)
+	if result := config.DB.Find(&users); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to get users"})
+	}
+
 	return c.JSON(http.StatusOK, users)
 }
 
@@ -34,27 +56,25 @@ func GetUsers(c echo.Context) error {
 // @Success 201 {object} models.User
 // @Router /users [post]
 func CreateUser(c echo.Context) error {
+	// Bind input data and validate request
 	request := new(models.CreateUserRequest)
-	if err := c.Bind(request); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
-	}
-	if err := c.Validate(request); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+	if err := helpers.BindAndValidateRequest(c, request); err != nil {
+		return err
 	}
 
 	// Hash Password
-	hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	hashedPassword, err := helpers.HashPassword(request.Password)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to hash password"})
 	}
-	request.Password = string(hash)
+	request.Password = hashedPassword
 
 	user := models.User{
 		Username:  request.Username,
 		Firstname: request.Firstname,
 		Surname:   request.Surname,
 		Email:     request.Email,
-		Password:  string(hash),
+		Password:  hashedPassword,
 	}
 
 	if result := config.DB.Create(&user); result.Error != nil {
@@ -62,6 +82,55 @@ func CreateUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, user)
+}
+
+// UpdateUser godoc
+// @Summary Update single user
+// @Description Update single user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} models.User
+// @Router /users/{id} [put]
+func UpdateUser(c echo.Context) error {
+	request := new(models.UpdateUserRequest)
+	if err := helpers.BindAndValidateRequest(c, request); err != nil {
+		return err
+	}
+
+	// Check if user already exists
+	userIDParam := c.Param("uid")
+	userID, err := strconv.Atoi(userIDParam)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+	}
+
+	var user models.User
+	if result := config.DB.First(&user, userID); result.Error != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
+	}
+
+	// Update user specific fields
+	user.Username = request.Username
+	user.Firstname = request.Firstname
+	user.Surname = request.Surname
+
+	// Handle Password change separately by checking if password is provided in the request
+	if request.Password != "" {
+		hashedPassword, err := helpers.HashPassword(request.Password)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to hash password"})
+		}
+		user.Password = hashedPassword
+	}
+
+	// Save changes
+	if result := config.DB.Save(&user); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update user"})
+	}
+
+	return c.JSON(http.StatusOK, user)
 }
 
 // References: https://pkg.go.dev/golang.org/x/crypto/bcrypt

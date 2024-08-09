@@ -7,20 +7,29 @@ import (
 )
 
 func SetupRoutes(e *echo.Echo) {
-	// Test Health
+	// Versioning
+	api := e.Group("/api/v1")
+
+	// Test Health (Public)
 	e.GET("/", handlers.HealthCheck)
 
 	// User
-	e.GET("/users", handlers.GetUsers)
+	users := api.Group("/users")
+	users.GET("", handlers.GetUsers)        // GET /api/v1/users
+	users.POST("", handlers.CreateUser)     // POST /api/v1/users
+	users.PUT("/:uid", handlers.UpdateUser) // PUT /api/v1/users/:uid
 
 	// Post
-	e.GET("/posts", handlers.GetPosts)
+	posts := api.Group("/posts")
+	posts.GET("", handlers.GetPosts) // GET /api/v1/posts
 
 	// Comment
-	e.GET("/comments", handlers.GetComments)
+	comment := api.Group("/comments")
+	comment.GET("/comments", handlers.GetComments) // GET /api/v1/comments
 
 	// CommentUser
-	e.GET("/commentuser", handlers.GetCommentUser)
+	commentUsers := api.Group("/commentuser")
+	commentUsers.GET("/commentuser", handlers.GetCommentUser) // GET /api/v1/commentuser
 
 	// Swagger
 	e.GET("/swagger/*", handlers.SwaggerHandler)
