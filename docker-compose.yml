@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mysql:
     image: mysql:latest
-    container_name: mysql_container
+    container_name: dwtakehome-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}          # Root password
       MYSQL_DATABASE: ${DB_NAME}            # Your database name
@@ -13,6 +13,7 @@ services:
       - "3306:3306"                         # Map host port 3306 to container port 3306
     volumes:
       - mysql_data:/var/lib/mysql           # Persist data between container restarts
+      - ./create_database.sql:/docker-entrypoint-initdb.d/create_database.sql  # Create database on container start
     networks:
       - mysql_network
 
