@@ -54,4 +54,9 @@ type UpdateUserRequest struct {
 	Password  string `json:"password,omitempty" validate:"required,min=8"`
 }
 
+type LoginUserRequest struct {
+	Identifier string `json:"identifier" validate:"required"`
+	Password   string `json:"password" validate:"required"`
+}
+
 // TO-DO: https://github.com/qor/validations to validate model at database level

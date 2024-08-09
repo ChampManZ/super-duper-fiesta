@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { createUser } from '../services/api'
 import { useNavigate } from "react-router-dom";
 
-function RegisterForm() {
+function RegisterPage() {
     const [registerData, setRegisterData] = useState({
         username: '',
         firstname: '',
@@ -94,9 +94,9 @@ function RegisterForm() {
         } catch (error) {
             // Error log from the server side
             if (error.response && error.response.data) {
-                setErrorText(error.response.data.message);
+                setErrorText(error.response.data.message)
             } else {
-                console.error('Error registering user:', error.message);
+                console.error('Error registering user:', error.message)
             }
         }
     }
@@ -153,4 +153,4 @@ function RegisterForm() {
     )
 }
 
-export default RegisterForm
+export default RegisterPage

@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // GetUsers godoc
@@ -44,6 +45,32 @@ func GetUsers(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, users)
+}
+
+func LoggedInUser(c echo.Context) error {
+	request := new(models.LoginUserRequest)
+	if err := helpers.BindAndValidateRequest(c, request); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+	}
+
+	var user models.User
+	if result := config.DB.Where("username = ? OR email = ?", request.Identifier, request.Identifier).First(&user); result.Error != nil {
+		return c.JSON((http.StatusUnauthorized), map[string]string{"message": "Invalid username or email"})
+	}
+	// Reference: CompareHashAndPassword compares a bcrypt hashed password with its possible plaintext equivalent. Returns nil on success, or an error on failure.
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid password"})
+	}
+
+	token, err := helpers.GenerateJWTToken(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate token"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Login successful",
+		"token":   token,
+	})
 }
 
 // CreateUser godoc
