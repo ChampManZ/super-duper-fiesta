@@ -47,6 +47,19 @@ func GetUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
+// LoggedInUser godoc
+// @Summary Login user
+// @Description Login user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body models.LoginUserRequest true "User object that needs to be logged in"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 401 {object} map[string]string "Invalid username or email"
+// @Failure 401 {object} map[string]string "Invalid password"
+// @Failure 500 {object} map[string]string "Failed to generate token"
+// @Router /login [post]
 func LoggedInUser(c echo.Context) error {
 	request := new(models.LoginUserRequest)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {

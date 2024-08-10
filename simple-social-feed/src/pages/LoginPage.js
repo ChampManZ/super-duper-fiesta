@@ -25,6 +25,8 @@ function LoginPage() {
 
         try {
             const response = await axios.post('http://localhost:1323/api/v1/login', loginData)
+            console.log('User logged in:', response.data)
+            console.log('Token:', response.data.token)
             localStorage.setItem('token', response.data.token)
             navigate('/feed')
         } catch (error) {
