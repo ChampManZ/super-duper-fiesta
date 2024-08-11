@@ -11,8 +11,17 @@ function FeedPage() {
     const [loading, setLoading] = useState(true)
     const [errorText, setErrorText] = useState('')
     const [showCreatePostForm, setShowCreatePostForm] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
 
     useEffect(() => {
+
+        const token = localStorage.getItem('token')
+        if (token) {
+            setIsLoggedIn(true)
+        } else {
+            setIsLoggedIn(false)
+        }
+
         const fetchPosts = async () => {
             try {
                 const response = await getPosts()
@@ -70,8 +79,12 @@ function FeedPage() {
                 <ActionButton text="Create Post" onClick={() => setShowCreatePostForm(true)} />
                 {showCreatePostForm && <CreatePostForm onPostCreated={handlePostCreated} />}
             </div> <br />
-            <LogoutButton /> <br /> <br />
-            <ButtonLink href="/" text="Home" />
+            { isLoggedIn ? (<LogoutButton />) : <div>
+                <h4>Join the fun now!</h4>
+                <ButtonLink text="Login" href="/login" />
+                <ButtonLink text="Register" href="/register" />
+            </div> 
+            } 
         </div>
     )
 }

@@ -7,6 +7,7 @@ const ButtonLink = ({ href, text, style, onMouseEnter, onMouseLeave }) => {
         backgroundColor: "#f44336",
         color: "white",
         padding: "14px 25px",
+        margin: "10px",
         borderRadius: "5px",
         textAlign: "center",
         textDecoration: "none",

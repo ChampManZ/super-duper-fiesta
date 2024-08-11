@@ -7,6 +7,7 @@ const ActionButton = ({ text, onClick, style, onMouseEnter, onMouseLeave }) => {
         backgroundColor: "#068932",
         color: "white",
         padding: "12px 12px",
+        margin: "10px",
         borderRadius: "5px",
         textAlign: "center",
         textDecoration: "none",
