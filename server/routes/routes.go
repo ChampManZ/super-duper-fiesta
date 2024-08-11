@@ -21,15 +21,9 @@ func SetupRoutes(e *echo.Echo) {
 
 	// Public API Routes
 	api.POST("/login", handlers.LoggedInUser) // POST /api/v1/login
+	api.POST("/logout", handlers.Logout)      // POST /api/v1/logout
 	api.POST("/users", handlers.CreateUser)   // POST /api/v1/users
-
-	// Public Posts is available to all users even if they are not logged in or registered
-	// In the future, we can add a function to restrict access to certain posts
-	// e.g. only friends can see the post (in case we have a friends system)
-	api.GET("/posts", handlers.GetPosts) // GET /api/v1/posts
-
-	// Same to comment, public comments are available to all users
-	api.GET("/comments", handlers.GetComments) // GET /api/v1/comments
+	api.GET("/posts", handlers.GetPosts)      // GET /api/v1/posts
 
 	//------------------------ Admin routes ------------------------//
 	admin := api.Group("/admin")
@@ -48,6 +42,9 @@ func SetupRoutes(e *echo.Echo) {
 	// Users
 	admin.GET("/users", handlers.GetUsers) // GET /api/v1/admin/users (Retrieve all users)
 	// TODO: Update operation for admin only
+
+	// Comments
+	admin.GET("/comments", handlers.GetComments) // GET /api/v1/admin/comments
 
 	// ComentUser
 	admin.GET("/commentuser", handlers.GetCommentUser) // GET /api/v1/admin/commentuser (Retrieve comment-user associations)

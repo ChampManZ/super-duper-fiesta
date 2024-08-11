@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { createPost } from '../services/api';
 
 const CreatePostForm = ({ onPostCreated }) => {
     const [message, setMessage] = useState('')
@@ -14,15 +14,11 @@ const CreatePostForm = ({ onPostCreated }) => {
             if (!token) {
                 throw new Error('You are not authorized to post. Please re-log in and try again.')
             }
-
-            const response = await axios.post('http://localhost:1323/api/v1/restricted/posts', { message }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-
+    
+            const response = await createPost(message, token)
             setMessage('')
             onPostCreated(response.data)
+
         } catch (error) {
             if (error.response && error.response.staus === 401) {
                 setErrorText('You are not authorized to create a post. Please try again.')
@@ -50,7 +46,7 @@ const CreatePostForm = ({ onPostCreated }) => {
                 />
             </div>
             {errorText && <p className="text-danger">{errorText}</p>}
-            <button type="submit" className="btn btn-primary">Create Post</button>
+            <button type="submit" className="btn btn-primary">Add Post</button>
         </form>
     );
 };

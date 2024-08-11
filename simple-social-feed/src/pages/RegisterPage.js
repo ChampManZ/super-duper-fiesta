@@ -148,8 +148,8 @@ function RegisterPage() {
                 <input type="password" name="password" id="password" className="form-control" value={registerData.password} onChange={handleInputEventChange} required />
             </div>
             <button type="submit" className="btn btn-success">Register</button>
-            { errorText && <p className='text-danger'>{errorText}</p> }
             </form> <br />
+            { errorText && <p className='text-danger'>{errorText}</p> }
             <ActionButton text="Home" onClick={() => navigate('/')} />
         </div>
     )

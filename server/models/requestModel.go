@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -31,4 +33,12 @@ type JWTClaims struct {
 	Username string `json:"username"`
 	Admin    string `json:"admin"`
 	jwt.RegisteredClaims
+}
+
+type GetPublicPostsRequest struct {
+	PostID    uint      `json:"post_id"`
+	Username  string    `json:"username"`
+	Message   string    `json:"post_message"`
+	CreatedAt time.Time `json:"post_created_at"`
+	UpdatedAt time.Time `json:"post_updated_at"`
 }

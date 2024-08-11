@@ -3,14 +3,11 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"os"
 	"server/config"
 	"server/helpers"
 	"server/models"
 	"strconv"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -79,27 +76,16 @@ func LoggedInUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid password"})
 	}
 
-	userSessionToken := uuid.New().String()
-
-	if result := config.DB.Model(&user).Where("username = ? OR email = ?", request.Identifier, request.Identifier).Update("cookie_token", userSessionToken); result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update user session token"})
-	}
-
-	// In this project, we are not focusing on the security of the cookie token much
-	// We will focus on main function instead, but we still have this to set priority on security
-	cookie := &http.Cookie{}
-	cookie.Name = "sessionID"
-	cookie.Value = userSessionToken
-	cookie.Expires = time.Now().Add(72 * time.Hour)
-	cookie.HttpOnly = true
-	cookie.Secure = true
-
-	c.SetCookie(cookie)
-
 	token, err := helpers.GenerateJWTToken(user)
 	if err != nil {
 		log.Println("Error creating JWT token:", err)
 		return c.String(http.StatusInternalServerError, "Failed to generate token")
+	}
+
+	WriteLogInCookie(c, token)
+
+	if result := config.DB.Model(&user).Where("(username = ? OR email = ?) AND password = ?", request.Identifier, request.Identifier, user.Password).Update("cookie_token", token); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update user session token"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -136,17 +122,17 @@ func CreateUser(c echo.Context) error {
 		}
 	}
 
+	// Set isAdmin to 0 by default.
+	// In a real-world application, this should be set to 0 by default and only set to 1 by an admin user.
+	// isAdmin should be gain and lost by an admin user only, not through registration.
+	isAdmin := "0"
+
 	// Hash Password
 	hashedPassword, err := helpers.HashPassword(request.Password)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to hash password"})
 	}
 	request.Password = hashedPassword
-
-	var isAdmin string
-	if request.Username == os.Getenv("ADMIN_USERNAME") && request.Password == os.Getenv("ADMIN_PASSWORD") {
-		isAdmin = "1"
-	}
 
 	user := models.User{
 		Username:  request.Username,

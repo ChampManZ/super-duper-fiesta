@@ -12,7 +12,7 @@ type User struct {
 	Surname     string    `gorm:"not null" json:"surname"`
 	Email       string    `gorm:"unique" json:"email"`
 	Password    string    `gorm:"not null" json:"-"` // Hide password from JSON response
-	IsAdmin     string    `gorm:"not null" json:"is_admin"`
+	IsAdmin     string    `gorm:"type:VARCHAR(1);default:'0'" json:"is_admin"`
 	CookieToken string    `gorm:"unique;not null" json:"-"` // Hide cookie token from JSON response
 	Posts       []Post    `gorm:"foreignKey:UserID"`        // One-to-Many relationship (has many) | One user can have many posts
 	Comments    []Comment `gorm:"many2many:comment_users"`  // Many-to-Many relationship (has many) | One user can have many comments

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import ActionButton from "../components/ActionButton";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { loginUser } from "../services/api";
 
 function LoginPage() {
 
@@ -24,13 +25,14 @@ function LoginPage() {
         setErrorText('')
 
         try {
-            const response = await axios.post('http://localhost:1323/api/v1/login', loginData)
+            const response = await loginUser(loginData)
             console.log('User logged in:', response.data)
             console.log('Token:', response.data.token)
             localStorage.setItem('token', response.data.token)
             navigate('/feed')
         } catch (error) {
             if (error.response && error.response.data) {
+                console.log('Error logging user:', error)
                 setErrorText(error.response.data.message)
             } else {
                 console.error('Error logging user:', error.message)
@@ -68,7 +70,8 @@ function LoginPage() {
                 </div>
                 <button type="submit" className="btn btn-primary">Login</button>
             </form>
-            { errorText && <p className='text-danger'>{errorText}</p> }
+            { errorText && <p className='text-danger'>{errorText}</p> } <br />
+            <ActionButton text="Home" onClick={() => navigate('/')} />
         </div>
     )
 }

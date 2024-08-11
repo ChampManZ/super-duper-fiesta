@@ -19,8 +19,8 @@ import (
 // @Success 200 {object} models.Post
 // @Router /posts [get]
 func GetPosts(c echo.Context) error {
-	var posts []models.Post
-	if result := config.DB.Preload("User").Find(&posts); result.Error != nil {
+	var posts []models.GetPublicPostsRequest
+	if result := config.DB.Table("posts").Select("posts.post_id, users.username, posts.message, posts.created_at, posts.updated_at").Joins("inner join users on users.user_id = posts.user_id").Scan(&posts); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to get posts"})
 	}
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"server/config"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -42,6 +43,29 @@ func CookieChecker(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return next(c)
 	}
+}
+
+func WriteLogInCookie(c echo.Context, sessionToken string) {
+	cookie := new(http.Cookie)
+	cookie.Name = "JWTCookie"
+	cookie.Value = sessionToken
+	cookie.Expires = time.Now().Add(72 * time.Hour)
+	cookie.HttpOnly = true
+	cookie.Secure = true
+	c.SetCookie(cookie)
+}
+
+func Logout(c echo.Context) error {
+	// Clear cookie
+	cookie := new(http.Cookie)
+	cookie.Name = "JWTCookie"
+	cookie.Value = ""
+	cookie.Expires = time.Now()
+	cookie.HttpOnly = true
+	cookie.Secure = true
+	c.SetCookie(cookie)
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Logout successful"})
 }
 
 // For debug
