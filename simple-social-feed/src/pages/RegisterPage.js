@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { createUser } from '../services/api'
 import { useNavigate } from "react-router-dom";
+import ActionButton from '../components/ActionButton'
 
 function RegisterPage() {
     const [registerData, setRegisterData] = useState({
@@ -148,7 +149,8 @@ function RegisterPage() {
             </div>
             <button type="submit" className="btn btn-success">Register</button>
             { errorText && <p className='text-danger'>{errorText}</p> }
-            </form>
+            </form> <br />
+            <ActionButton text="Home" onClick={() => navigate('/')} />
         </div>
     )
 }

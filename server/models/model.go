@@ -6,14 +6,16 @@ import (
 
 // GORM Model
 type User struct {
-	UserID    uint      `gorm:"primaryKey" json:"uid"`
-	Username  string    `gorm:"unique" json:"username"`
-	Firstname string    `gorm:"not null" json:"firstname"`
-	Surname   string    `gorm:"not null" json:"surname"`
-	Email     string    `gorm:"unique" json:"email"`
-	Password  string    `gorm:"not null" json:"-"`       // Hide password from JSON response
-	Posts     []Post    `gorm:"foreignKey:UserID"`       // One-to-Many relationship (has many) | One user can have many posts
-	Comments  []Comment `gorm:"many2many:comment_users"` // Many-to-Many relationship (has many) | One user can have many comments
+	UserID      uint      `gorm:"primaryKey" json:"uid"`
+	Username    string    `gorm:"unique" json:"username"`
+	Firstname   string    `gorm:"not null" json:"firstname"`
+	Surname     string    `gorm:"not null" json:"surname"`
+	Email       string    `gorm:"unique" json:"email"`
+	Password    string    `gorm:"not null" json:"-"` // Hide password from JSON response
+	IsAdmin     string    `gorm:"not null" json:"is_admin"`
+	CookieToken string    `gorm:"unique;not null" json:"-"` // Hide cookie token from JSON response
+	Posts       []Post    `gorm:"foreignKey:UserID"`        // One-to-Many relationship (has many) | One user can have many posts
+	Comments    []Comment `gorm:"many2many:comment_users"`  // Many-to-Many relationship (has many) | One user can have many comments
 }
 
 type Post struct {
@@ -22,7 +24,7 @@ type Post struct {
 	Message   string    `gorm:"not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoCreateTime"`
-	User      User      `gorm:"foreignKey:UserID"` // One-to-One relationship (belongs to) | One post can have one user
+	User      User      `gorm:"foreignKey:UserID;references:UserID"` // One-to-One relationship (belongs to) | One post can have one user
 }
 
 type Comment struct {
@@ -36,27 +38,6 @@ type Comment struct {
 type CommentUser struct {
 	CommentID uint `gorm:"primaryKey;autoIncrement:false"` // Composite primary key
 	UserID    uint `gorm:"primaryKey;autoIncrement:false"` // Composite primary key
-}
-
-// Request Model
-type CreateUserRequest struct {
-	Username  string `json:"username" validate:"required,min=3,max=32"`
-	Firstname string `json:"firstname" validate:"required"`
-	Surname   string `json:"surname" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8"`
-}
-
-type UpdateUserRequest struct {
-	Username  string `json:"username" validate:"required,min=3,max=32"`
-	Firstname string `json:"firstname" validate:"required"`
-	Surname   string `json:"surname" validate:"required"`
-	Password  string `json:"password,omitempty" validate:"required,min=8"`
-}
-
-type LoginUserRequest struct {
-	Identifier string `json:"identifier" validate:"required"`
-	Password   string `json:"password" validate:"required"`
 }
 
 // TO-DO: https://github.com/qor/validations to validate model at database level

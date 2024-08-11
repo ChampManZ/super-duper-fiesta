@@ -5,9 +5,8 @@ import (
 	"server/config"
 	"server/helpers"
 	"server/models"
-	"strconv"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,7 +20,7 @@ import (
 // @Router /posts [get]
 func GetPosts(c echo.Context) error {
 	var posts []models.Post
-	if result := config.DB.Find(&posts); result.Error != nil {
+	if result := config.DB.Preload("User").Find(&posts); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to get posts"})
 	}
 
@@ -34,16 +33,16 @@ func CreatePost(c echo.Context) error {
 		return err
 	}
 
-	user := c.Get(("user")).(*jwt.Token)
-	claims := user.Claims.(jwt.StandardClaims)
-	userID, err := strconv.ParseUint(claims.Id, 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Failed to get user ID"})
-	}
+	// Reference: https://github.com/labstack/echo/issues/1504
+	user := c.Get(("user"))
+	token := user.(*jwt.Token)
+	claims := token.Claims.(*models.JWTClaims)
+
+	userID := claims.UserID
 
 	post := models.Post{
 		Message: request.Message,
-		UserID:  uint(userID),
+		UserID:  userID,
 	}
 
 	if result := config.DB.Create(&post); result.Error != nil {

@@ -3,9 +3,12 @@ package routes
 import (
 	"os"
 	"server/handlers"
+	"server/models"
 
+	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func SetupRoutes(e *echo.Echo) {
@@ -13,8 +16,8 @@ func SetupRoutes(e *echo.Echo) {
 	api := e.Group("/api/v1")
 
 	// Public Routes for maintaining health check and swagger
-	e.GET("/", handlers.HealthCheck)
-	e.GET("/swagger/*", handlers.SwaggerHandler)
+	e.GET("/", handlers.HealthCheck)             // GET / (Health check endpoint)
+	e.GET("/swagger/*", handlers.SwaggerHandler) // GET /swagger/* (Swagger documentation)
 
 	// Public API Routes
 	api.POST("/login", handlers.LoggedInUser) // POST /api/v1/login
@@ -28,19 +31,49 @@ func SetupRoutes(e *echo.Echo) {
 	// Same to comment, public comments are available to all users
 	api.GET("/comments", handlers.GetComments) // GET /api/v1/comments
 
-	// Protected routes (require JWT)
-	protected := api.Group("")
-	protected.Use(echojwt.JWT([]byte(os.Getenv("JWT_SECRET"))))
+	//------------------------ Admin routes ------------------------//
+	admin := api.Group("/admin")
+	loggerConfig := middleware.LoggerConfig{
+		Format: `${time_rfc3339} ${status} ${method} ${host}${path} ${latency_human}` + "\n",
+	}
+	admin.Use(middleware.LoggerWithConfig(loggerConfig))
+	admin.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		if username == os.Getenv("ADMIN_USERNAME") && password == os.Getenv("ADMIN_PASSWORD") {
+			return true, nil
+		}
+		return false, nil
+	}))
+	admin.GET("/main", handlers.MainAdminPage) // GET /api/v1/admin/main (Main admin page)
+
+	// Users
+	admin.GET("/users", handlers.GetUsers) // GET /api/v1/admin/users (Retrieve all users)
+	// TODO: Update operation for admin only
+
+	// ComentUser
+	admin.GET("/commentuser", handlers.GetCommentUser) // GET /api/v1/admin/commentuser (Retrieve comment-user associations)
+
+	//------------------------ Cookie (For debug) ------------------------//
+	cookie := api.Group("/cookie")
+	cookie.Use(handlers.CookieChecker)
+	cookie.GET("/main", handlers.MainAdminPage) // GET /api/v1/cookie/main
+
+	//------------------------ JWT Protected Routes (Need authentication routes) ------------------------//
+	jwt_protected := api.Group("/restricted")
+	config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(models.JWTClaims)
+		},
+		SigningKey: []byte(os.Getenv("JWT_SECRET")),
+	}
+	jwt_protected.Use(echojwt.WithConfig(config))
+	jwt_protected.GET("/main", handlers.RestrictedHandler) // GET /api/v1/restricted/main
 
 	// User routes
-	protected.GET("/users", handlers.GetUsers)        // GET /api/v1/users
-	protected.PUT("/users/:uid", handlers.UpdateUser) // PUT /api/v1/users/:uid
+	jwt_protected.PUT("/users/:uid", handlers.UpdateUser) // PUT /api/v1/restricted/users/:uid (Update a user by ID)
 
 	// Post routes
-	protected.POST("/posts", handlers.CreatePost) // POST /api/v1/posts
+	jwt_protected.POST("/posts", handlers.CreatePost) // POST /api/v1/restricted/posts (Create a new post)
 
 	// Comment routes
-
-	// CommentUser routes
-	protected.GET("/commentuser", handlers.GetCommentUser) // GET /api/v1/commentuser
+	jwt_protected.POST("/comments", handlers.PostComment) // POST /api/v1/restricted/comments (Create a new comment)
 }

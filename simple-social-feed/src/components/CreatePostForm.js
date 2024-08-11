@@ -15,7 +15,7 @@ const CreatePostForm = ({ onPostCreated }) => {
                 throw new Error('You are not authorized to post. Please re-log in and try again.')
             }
 
-            const response = await axios.post('http://localhost:1323/api/v1/posts', { message }, {
+            const response = await axios.post('http://localhost:1323/api/v1/restricted/posts', { message }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -27,12 +27,12 @@ const CreatePostForm = ({ onPostCreated }) => {
             if (error.response && error.response.staus === 401) {
                 setErrorText('You are not authorized to create a post. Please try again.')
                 console.error('Unauthorized: Missing or malformed JWT token')
-            } else if (error.response) {
+            } else if (error.response && error.response.staus === 500) {
                 console.error('An error occurred while creating the post:', error.response.data.message)
-                setErrorText(error.response.data.message || 'Failed to create post. Please try again.')
+                setErrorText('Internal server error. Please try again later.')
             } else {
                 console.error('Error:', error.message)
-                setErrorText('Failed to create post. Please check your network connection and try again.')
+                setErrorText('Failed to create post. Please try again.')
             }
         }
     }

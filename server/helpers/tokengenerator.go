@@ -3,20 +3,29 @@ package helpers
 import (
 	"os"
 	"server/models"
-	"strconv"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
 func GenerateJWTToken(user models.User) (string, error) {
-	claims := &jwt.StandardClaims{
-		Id:        strconv.Itoa(int(user.UserID)),
-		ExpiresAt: time.Now().Add(time.Hour * 72).Unix(), // Token expires in 72 hours
+	// Best standard is to have a standard claim as another object
+	// Reference: https://pkg.go.dev/github.com/golang-jwt/jwt/v5#NewWithClaims
+	claims := models.JWTClaims{
+		UserID:   user.UserID,
+		Username: user.Username,
+		Admin:    user.IsAdmin,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	jwtSecret := os.Getenv("JWT_SECRET")
+	tokenString, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }

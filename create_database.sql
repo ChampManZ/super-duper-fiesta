@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS users (
     firstname VARCHAR(255) NOT NULL,
     surname VARCHAR(255) NOT NULL,
     email VARCHAR(64) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    is_admin VARCHAR(1) DEFAULT '0',
+    cookie_token VARCHAR(255)
 );
 
 -- For FK on user_id, we let ON DELETE CASCADE to delete all the posts of the user when the user is deleted.
