@@ -21,7 +21,7 @@ type User struct {
 	IsAdmin     string    `gorm:"type:VARCHAR(1);default:'0'" json:"is_admin"`
 	CookieToken string    `gorm:"unique;not null" json:"-"` // Hide cookie token from JSON response
 	Posts       []Post    `gorm:"foreignKey:UserID"`        // One-to-Many relationship (has many) | One user can have many posts
-	Comments    []Comment `gorm:"many2many:comment_users"`  // Many-to-Many relationship (has many) | One user can have many comments
+	Comments    []Comment `gorm:"many2many:CommentUser"`    // Many-to-Many relationship (has many) | One user can have many comments
 }
 
 // Post represents a post in the system
@@ -42,7 +42,7 @@ type Comment struct {
 	CommentMSG string    `gorm:"not null"`
 	CreatedAt  time.Time `gorm:"autoCreateTime"`
 	UpdatedAt  time.Time `gorm:"autoCreateTime"`
-	Users      []User    `gorm:"many2many:comment_users"` // Many-to-Many relationship (belongs to) | Many users can have many comments which lead to CommentUser table
+	Users      []User    `gorm:"many2many:CommentUser"` // Many-to-Many relationship (belongs to) | Many users can have many comments which lead to CommentUser table
 }
 
 // CommentUser represents the relationship between comments and users

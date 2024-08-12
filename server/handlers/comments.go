@@ -7,7 +7,6 @@ import (
 	"server/models"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -45,20 +44,11 @@ func PostComment(c echo.Context) error {
 		return err
 	}
 
-	userToken := c.Get(("user")).(*jwt.Token)
-	claims := userToken.Claims.(jwt.MapClaims)
-	userID := claims["user_id"]
-
-	var user models.User
-	if res := config.DB.First(&user, userID); res.Error != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
-	}
-
+	// Response to test: { "CommentMSG": "something" }
 	comment := models.Comment{
 		CommentMSG: request.CommentMSG,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
-		Users:      []models.User{user},
 	}
 
 	if result := config.DB.Create(&comment); result.Error != nil {
