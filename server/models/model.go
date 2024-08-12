@@ -5,6 +5,9 @@ import (
 )
 
 // GORM Model
+// In the end, I decide to go with SQL from Scratch instead of GORM AutoMigrate() Function
+// In real-world projects, we have a separate datacenter for the database that use SQL script and
+// store procedures to manage the database schema. This is because we want to have full control
 type User struct {
 	UserID      uint      `gorm:"primaryKey" json:"uid"`
 	Username    string    `gorm:"unique" json:"username"`

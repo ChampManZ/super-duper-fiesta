@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { adminMigration, accessProtectedRoute } from "../services/api";
+import { runMigration, accessProtectedRoute, getMigration } from "../services/api";
 import ActionButton from "../components/ActionButton";
 
 function AdminControl() {
 
     const [warning, setWarning] = useState('')
     const [showConfirm, setShowConfirm] = useState(false)
+    const [migrations, setMigrations] = useState([])
+    const [selectedMigration, setSelectedMigration] = useState(null)
+    const [resultMessage, setResultMessage] = useState('')
     const [isAuthorized, setIsAuthorized] = useState(false)
     const [loading, setLoading] = useState(true)  // This state helps to show a loading message while checking authorization and fetching data from the server
 
     useEffect(() => {
-        const checkAuthorization = async () => {
+        const checkAuthorizationAndFetch = async () => {
             try {
                 const res = await fetch(accessProtectedRoute)
                 if (res.status === 401) {
                     setWarning('Unauthorized')
-                } else if (res.ok) {
+                } else {
                     setIsAuthorized(true)
+                    const migrationRes = await getMigration()
+                    setMigrations(migrationRes.data)
                 }
             } catch (error) {
                 console.error('Error access admin page:', error)
@@ -25,28 +30,37 @@ function AdminControl() {
                 setLoading(false)
             }
         }
-        checkAuthorization()
+        checkAuthorizationAndFetch()
     }, [])
 
     const handleRunMigration = async () => {
+        if (!selectedMigration) return;
+
         setWarning('')
+        setShowConfirm(false)
 
         try {
-            const res = await adminMigration()
-            setWarning(res.data.message)
-            setShowConfirm(false)
-        } catch (error) {
-            setWarning(error.response.data.message)
-            setShowConfirm(false)
-        }
+            const res = await runMigration(selectedMigration)
+            setResultMessage((prev) => ({
+                ...prev,
+                [selectedMigration]: res.data.message
+            }))
+    } catch (error) {
+        console.error('Error running migration:', error)
+        setWarning('Failed to run migration. Please try again.')
+    } finally {
+        setSelectedMigration(null)
     }
+}
 
-    const handleConfirmation = () => {
+    const handleConfirmation = (migrationID) => {
+        setSelectedMigration(migrationID)
         setShowConfirm(true)
     }
 
     const handleCancel = () => {
         setShowConfirm(false)
+        setSelectedMigration(null)
     }
 
     if (loading) {
@@ -60,7 +74,20 @@ function AdminControl() {
     return (
         <div>
             <h2>Admin Control</h2>
-            <ActionButton text={'Run Migrations'} onClick={handleConfirmation} />
+            { migrations.map((migration) => (
+                <div key={migration.migration_id} style={styles.migration}>
+                    <p>{migration.migration_title}</p>
+                    <ActionButton 
+                    text={"Execute"} 
+                    onClick={() => handleConfirmation(migration.migration_id)}
+                    style={styles.button} 
+                    disabled={selectedMigration !== null}
+                    />
+                    { resultMessage[migration.migration_id] && <p>Successfully execute {resultMessage[migration.migration_id]}</p>}
+                </div>
+            )) }
+            { warning && <p>{warning}</p> }
+
             { showConfirm && (
                 <div style={styles.confirmationModalStyle}>
                     <p>Are you sure you want to run migration?</p>
@@ -68,12 +95,18 @@ function AdminControl() {
                     <ActionButton text={'Cancel'} onClick={handleCancel} style={styles.button} />
                 </div>
             ) }
-            { warning && <p>{warning}</p> }           
         </div>
     )
 }
 
 const styles = {
+    migration: {
+        border: "1px solid #ccc",
+        padding: "10px",
+        marginBottom: "10px",
+        borderRadius: "5px",
+        position: "relative",
+    },
     confirmationModalStyle: {
         backgroundColor: '#f8f8f8',
         border: '1px solid #ccc',

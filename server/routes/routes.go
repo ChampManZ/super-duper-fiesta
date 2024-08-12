@@ -41,6 +41,7 @@ func SetupRoutes(e *echo.Echo) {
 
 	// Users
 	admin.GET("/users", handlers.GetUsers)               // GET /api/v1/admin/users (Retrieve all users)
+	admin.GET("/get-migrations", handlers.GetMigration)  // GET /api/v1/admin/get-migrations (Retrieve all migrations)
 	admin.POST("/run-migrations", handlers.RunMigration) // POST /api/v1/admin/run-migrations (Run migrations)
 
 	// Comments

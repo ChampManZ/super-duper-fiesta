@@ -2,6 +2,12 @@ import axios from 'axios'
 import { ADMIN_USERNAME, ADMIN_PASSWORD } from './constant'
 
 const API_BASE_URL = 'http://localhost:1323/api'
+const ADMIN_HEADER = {         
+    auth: {
+            username: ADMIN_USERNAME,
+            password: ADMIN_PASSWORD
+    }
+}
 
 export const createUser = (userData) => {
     return axios.post(`${API_BASE_URL}/v1/users`, userData)
@@ -38,11 +44,10 @@ export const accessProtectedRoute = () => {
     }
 }
 
-export const adminMigration = () => {
-    return axios.post(`${API_BASE_URL}/v1/admin/run-migrations`, {}, {
-        auth: {
-            username: ADMIN_USERNAME,
-            password: ADMIN_PASSWORD
-        }
-    })
+export const getMigration = () => {
+    return axios.get(`${API_BASE_URL}/v1/admin/get-migrations`, ADMIN_HEADER)
+}
+
+export const runMigration = (migrationID) => {
+    return axios.post(`${API_BASE_URL}/v1/admin/run-migrations`, { migration_id: migrationID }, ADMIN_HEADER)
 }

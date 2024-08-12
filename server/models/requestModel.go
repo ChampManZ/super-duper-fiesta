@@ -42,3 +42,12 @@ type GetPublicPostsRequest struct {
 	CreatedAt time.Time `json:"post_created_at"`
 	UpdatedAt time.Time `json:"post_updated_at"`
 }
+
+type GetMigrationListRequest struct {
+	MigrationID string `json:"migration_id"`
+	Title       string `json:"migration_title"`
+}
+
+type RunMigrationRequest struct {
+	MigrationID string `json:"migration_id"`
+}
