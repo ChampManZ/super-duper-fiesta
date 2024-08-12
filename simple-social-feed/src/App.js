@@ -6,7 +6,7 @@ import SuccessPage from './pages/SuccessPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import FeedPage from './pages/FeedPage';
-import EditUser from './pages/EditUser';
+import UserProfilePage from './pages/UserProfilePage';
 import AdminControl from './pages/AdminControl';
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/feed" element={<FeedPage />} />
-          <Route path="/edit:id" element={<EditUser />} />
+          <Route path="/:username" element={<UserProfilePage />} />
           <Route path='/admin' element={<AdminControl />} />
         </Routes>
       </div>

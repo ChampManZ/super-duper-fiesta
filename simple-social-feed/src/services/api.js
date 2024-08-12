@@ -17,6 +17,10 @@ export const loginUser = (loginData) => {
     return axios.post(`${API_BASE_URL}/v1/login`, loginData)
 }
 
+export const getUser = (uid) => {
+    return axios.get(`${API_BASE_URL}/v1/admin/users?uid=${uid}`, ADMIN_HEADER)
+}
+
 export const createPost = (message, token) => {
     return axios.post('http://localhost:1323/api/v1/restricted/posts', { message }, {
         headers: {
@@ -50,4 +54,12 @@ export const getMigration = () => {
 
 export const runMigration = (migrationID) => {
     return axios.post(`${API_BASE_URL}/v1/admin/run-migrations`, { migration_id: migrationID }, ADMIN_HEADER)
+}
+
+export const updateUser = (uid, userData, token) => {
+    return axios.put(`${API_BASE_URL}/v1/restricted/users/${uid}`, userData, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
 }

@@ -5,6 +5,7 @@ import CreatePostForm from "../components/CreatePostForm";
 import MessageFeed from "../components/MessageFeed";
 import LogoutButton from "../components/LogoutButton";
 import { getPosts } from "../services/api";
+import { jwtDecode } from "jwt-decode";
 
 function FeedPage() {
     const [posts, setPosts] = useState([])
@@ -12,11 +13,18 @@ function FeedPage() {
     const [errorText, setErrorText] = useState('')
     const [showCreatePostForm, setShowCreatePostForm] = useState(false)
     const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const [username, setUsername] = useState('')
+
+    const padding = {
+        padding: '12px'
+    }
 
     useEffect(() => {
 
         const token = localStorage.getItem('token')
         if (token) {
+            const decodedToken = jwtDecode(token)
+            setUsername(decodedToken.username)
             setIsLoggedIn(true)
         } else {
             setIsLoggedIn(false)
@@ -65,12 +73,13 @@ function FeedPage() {
             <h2>Social Feed</h2>
             {isPostAvailable ? (
                 posts.map(post => (
-                    <MessageFeed
-                        key={post.post_id}
-                        username={post.username}
-                        postTime={post.post_created_at ? new Date(post.post_created_at).toLocaleString() : 'Unknown'}
-                        message={post.post_message}
-                    />
+                    <div key={post.post_id}>
+                        <MessageFeed
+                            username={post.username}
+                            postTime={post.post_created_at ? new Date(post.post_created_at).toLocaleString() : 'Unknown'}
+                            message={post.post_message}
+                        />
+                    </div>
                 ))
             ) : (
                 <p>No post available</p>
@@ -79,7 +88,12 @@ function FeedPage() {
                 <ActionButton text="Create Post" onClick={() => setShowCreatePostForm(true)} />
                 {showCreatePostForm && <CreatePostForm onPostCreated={handlePostCreated} />}
             </div> <br />
-            { isLoggedIn ? (<LogoutButton />) : <div>
+            { isLoggedIn ? (
+                <div>
+                    <ButtonLink text="My Profile" href={`/${username}`} style={padding} />
+                    <LogoutButton />
+                </div>
+                ) : <div>
                 <h4>Join the fun now!</h4>
                 <ButtonLink text="Login" href="/login" />
                 <ButtonLink text="Register" href="/register" />
