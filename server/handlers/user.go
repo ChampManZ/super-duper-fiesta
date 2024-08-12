@@ -13,17 +13,18 @@ import (
 )
 
 // GetUsers godoc
-// @Summary Get all users
-// @Description Get all users
-// @Tags users
+// @Summary Get all users or a specific user by ID
+// @Description Retrieve all users or a specific user if User ID is provided in the query parameter
+// @Tags Users
 // @Accept json
 // @Produce json
-// @Param userid query int false "User ID"
-// @Success 200 {object} []models.User
-// @Success 200 {object} models.User
+// @Param uid query int false "User ID"
+// @Success 200 {object} []models.User "List of all users"
+// @Success 200 {object} models.User "Details of a specific user"
+// @Failure 400 {object} map[string]string "Invalid input"
 // @Failure 404 {object} map[string]string "User not found"
 // @Failure 500 {object} map[string]string "Failed to retrieve users"
-// @Router /users [get]
+// @Router /api/v1/admin/users [get]
 func GetUsers(c echo.Context) error {
 	userID := c.QueryParam("uid")
 
@@ -49,18 +50,17 @@ func GetUsers(c echo.Context) error {
 }
 
 // LoggedInUser godoc
-// @Summary Login user
-// @Description Login user
-// @Tags users
+// @Summary Log in a user
+// @Description Authenticate a user and return a JWT token
+// @Tags Users
 // @Accept json
 // @Produce json
-// @Param user body models.LoginUserRequest true "User object that needs to be logged in"
-// @Success 200 {object} map[string]string
+// @Param user body models.LoginUserRequest true "User login details"
+// @Success 200 {object} map[string]string "Login successful, token returned"
 // @Failure 400 {object} map[string]string "Invalid input"
-// @Failure 401 {object} map[string]string "Invalid username or email"
-// @Failure 401 {object} map[string]string "Invalid password"
+// @Failure 401 {object} map[string]string "Invalid username, email, or password"
 // @Failure 500 {object} map[string]string "Failed to generate token"
-// @Router /login [post]
+// @Router /api/v1/login [post]
 func LoggedInUser(c echo.Context) error {
 	request := new(models.LoginUserRequest)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {
@@ -95,14 +95,16 @@ func LoggedInUser(c echo.Context) error {
 }
 
 // CreateUser godoc
-// @Summary Create single user
-// @Description Create single user
-// @Tags users
+// @Summary Create a new user
+// @Description Register a new user with the provided details
+// @Tags Users
 // @Accept json
 // @Produce json
-// @Param user body models.CreateUserRequest true "User object that needs to be created"
-// @Success 201 {object} models.User
-// @Router /users [post]
+// @Param user body models.CreateUserRequest true "User registration details"
+// @Success 201 {object} models.User "Newly created user details"
+// @Failure 409 {object} map[string]string "Username or email already exists"
+// @Failure 500 {object} map[string]string "Failed to create user"
+// @Router /api/v1/users [post]
 func CreateUser(c echo.Context) error {
 	// Bind input data and validate request
 	request := new(models.CreateUserRequest)
@@ -151,14 +153,18 @@ func CreateUser(c echo.Context) error {
 }
 
 // UpdateUser godoc
-// @Summary Update single user
-// @Description Update single user
-// @Tags users
+// @Summary Update an existing user
+// @Description Update the details of an existing user by ID
+// @Tags Users
 // @Accept json
 // @Produce json
-// @Param id path string true "User ID"
-// @Success 200 {object} models.User
-// @Router /users/{id} [put]
+// @Param id path int true "User ID"
+// @Param user body models.UpdateUserRequest true "Updated user details"
+// @Success 200 {object} models.User "Updated user details"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Failed to update user"
+// @Router /api/v1/restricted/users/{uid} [put]
 func UpdateUser(c echo.Context) error {
 	request := new(models.UpdateUserRequest)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {
@@ -196,6 +202,19 @@ func UpdateUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+// ChangePassword godoc
+// @Summary Change a user's password
+// @Description Change the password of an existing user by ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param user body models.UpdateUserPasswordRequest true "New password"
+// @Success 200 {object} map[string]string "Password updated successfully"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Failed to update password"
+// @Router /api/v1/restricted/users-update-password/{uid} [put]
 func ChangePassword(c echo.Context) error {
 	request := new(models.UpdateUserPasswordRequest)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {

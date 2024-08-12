@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/": {
             "get": {
-                "description": "Check if the server is running",
+                "description": "Check if the server is running and responsive",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,14 +25,612 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "healthcheck"
+                    "HealthCheck"
                 ],
-                "summary": "Health check",
+                "summary": "Perform a health check on the server",
                 "responses": {
                     "200": {
                         "description": "Server is running",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/main": {
+            "get": {
+                "description": "This is the main admin page accessible only to authenticated users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Admin main page",
+                "responses": {
+                    "200": {
+                        "description": "Welcome to the admin page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/get-migrations": {
+            "get": {
+                "description": "Get a list of all available migrations with their titles and descriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Migrations"
+                ],
+                "summary": "Retrieve all available migrations",
+                "responses": {
+                    "200": {
+                        "description": "List of migrations",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.GetMigrationListRequest"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to load migrations",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/run-migrations": {
+            "post": {
+                "description": "Execute a specific database migration identified by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Migrations"
+                ],
+                "summary": "Execute a migration",
+                "parameters": [
+                    {
+                        "description": "Migration ID to run",
+                        "name": "migration_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RunMigrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Migration ran successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Migration not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error running migration",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users": {
+            "get": {
+                "description": "Retrieve all users or a specific user if User ID is provided in the query parameter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get all users or a specific user by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "uid",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Details of a specific user",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve users",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/login": {
+            "post": {
+                "description": "Authenticate a user and return a JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Log in a user",
+                "parameters": [
+                    {
+                        "description": "User login details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login successful, token returned",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid username, email, or password",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to generate token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/logout": {
+            "post": {
+                "description": "This route logs out the user by clearing the JWT cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logout"
+                ],
+                "summary": "Logout user by clearing cookie",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/posts": {
+            "get": {
+                "description": "Get all posts with associated user details (username, firstname, surname)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Retrieve all posts",
+                "responses": {
+                    "200": {
+                        "description": "List of posts with user details",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.GetPublicPostsRequest"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve posts",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restricted/main": {
+            "get": {
+                "description": "This route is restricted and requires a valid JWT token to access",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restricted"
+                ],
+                "summary": "Restricted route with JWT authentication",
+                "responses": {
+                    "200": {
+                        "description": "Welcome [username]!",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restricted/posts": {
+            "post": {
+                "description": "Create a new post by an authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Create a new post",
+                "parameters": [
+                    {
+                        "description": "Post object that needs to be created",
+                        "name": "post",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Post"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Newly created post",
+                        "schema": {
+                            "$ref": "#/definitions/models.Post"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create post",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restricted/users-update-password/{uid}": {
+            "put": {
+                "description": "Change the password of an existing user by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Change a user's password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New password",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateUserPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update password",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/restricted/users/{uid}": {
+            "put": {
+                "description": "Update the details of an existing user by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update an existing user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated user details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated user details",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users": {
+            "post": {
+                "description": "Register a new user with the provided details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create a new user",
+                "parameters": [
+                    {
+                        "description": "User registration details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Newly created user details",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "409": {
+                        "description": "Username or email already exists",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -84,9 +682,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/posts": {
+        "/cookie-page": {
             "get": {
-                "description": "Get all posts",
+                "description": "This page is used for debugging cookies",
                 "consumes": [
                     "application/json"
                 ],
@@ -94,22 +692,22 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "posts"
+                    "debug"
                 ],
-                "summary": "Get all posts",
+                "summary": "Cookie debug page",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Welcome to the cookie page",
                         "schema": {
-                            "$ref": "#/definitions/models.Post"
+                            "type": "string"
                         }
                     }
                 }
             }
         },
-        "/users": {
+        "/jwt-page": {
             "get": {
-                "description": "Get all users",
+                "description": "This page is used for debugging JWT tokens",
                 "consumes": [
                     "application/json"
                 ],
@@ -117,104 +715,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "debug"
                 ],
-                "summary": "Get all users",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "userid",
-                        "in": "query"
-                    }
-                ],
+                "summary": "JWT debug page",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Welcome to the JWT page",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to retrieve users",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Create single user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Create single user",
-                "parameters": [
-                    {
-                        "description": "User object that needs to be created",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/{id}": {
-            "put": {
-                "description": "Update single user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Update single user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "type": "string"
                         }
                     }
                 }
@@ -223,6 +731,7 @@ const docTemplate = `{
     },
     "definitions": {
         "models.Comment": {
+            "description": "Represents a comment made by users",
             "type": "object",
             "properties": {
                 "commentID": {
@@ -247,6 +756,7 @@ const docTemplate = `{
             }
         },
         "models.CommentUser": {
+            "description": "Represents the many-to-many relationship between comments and users",
             "type": "object",
             "properties": {
                 "commentID": {
@@ -260,6 +770,7 @@ const docTemplate = `{
             }
         },
         "models.CreateUserRequest": {
+            "description": "Request model for creating a user",
             "type": "object",
             "required": [
                 "email",
@@ -273,18 +784,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "firstname": {
-                    "type": "string",
-                    "maxLength": 32,
-                    "minLength": 2
+                    "type": "string"
                 },
                 "password": {
                     "type": "string",
                     "minLength": 8
                 },
                 "surname": {
-                    "type": "string",
-                    "maxLength": 32,
-                    "minLength": 2
+                    "type": "string"
                 },
                 "username": {
                     "type": "string",
@@ -293,7 +800,63 @@ const docTemplate = `{
                 }
             }
         },
+        "models.GetMigrationListRequest": {
+            "description": "Response model for retrieving migration information",
+            "type": "object",
+            "properties": {
+                "migration_id": {
+                    "type": "string"
+                },
+                "migration_title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.GetPublicPostsRequest": {
+            "description": "Response model for retrieving public posts",
+            "type": "object",
+            "properties": {
+                "firstname": {
+                    "type": "string"
+                },
+                "post_created_at": {
+                    "type": "string"
+                },
+                "post_id": {
+                    "type": "integer"
+                },
+                "post_message": {
+                    "type": "string"
+                },
+                "post_updated_at": {
+                    "type": "string"
+                },
+                "surname": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.LoginUserRequest": {
+            "description": "Request model for user login",
+            "type": "object",
+            "required": [
+                "identifier",
+                "password"
+            ],
+            "properties": {
+                "identifier": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Post": {
+            "description": "Represents a post created by a user",
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -321,7 +884,52 @@ const docTemplate = `{
                 }
             }
         },
+        "models.RunMigrationRequest": {
+            "description": "Request model for running a migration",
+            "type": "object",
+            "properties": {
+                "migration_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UpdateUserPasswordRequest": {
+            "description": "Request model for updating a user's password",
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "models.UpdateUserRequest": {
+            "description": "Request model for updating user information",
+            "type": "object",
+            "required": [
+                "firstname",
+                "surname",
+                "username"
+            ],
+            "properties": {
+                "firstname": {
+                    "type": "string"
+                },
+                "surname": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 3
+                }
+            }
+        },
         "models.User": {
+            "description": "Represents a user with associated posts and comments",
             "type": "object",
             "properties": {
                 "comments": {
@@ -335,6 +943,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "firstname": {
+                    "type": "string"
+                },
+                "is_admin": {
                     "type": "string"
                 },
                 "posts": {

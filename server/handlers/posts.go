@@ -11,13 +11,14 @@ import (
 )
 
 // GetPosts godoc
-// @Summary Get all posts
-// @Description Get all posts
-// @Tags posts
+// @Summary Retrieve all posts
+// @Description Get all posts with associated user details (username, firstname, surname)
+// @Tags Posts
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.Post
-// @Router /posts [get]
+// @Success 200 {array} models.GetPublicPostsRequest "List of posts with user details"
+// @Failure 500 {object} map[string]string "Failed to retrieve posts"
+// @Router /api/v1/posts [get]
 func GetPosts(c echo.Context) error {
 	var posts []models.GetPublicPostsRequest
 	if result := config.DB.Table("posts").Select("posts.post_id, users.username, users.firstname, users.surname, posts.message, posts.created_at, posts.updated_at").Joins("inner join users on users.user_id = posts.user_id").Scan(&posts); result.Error != nil {
@@ -27,6 +28,18 @@ func GetPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, posts)
 }
 
+// CreatePost godoc
+// @Summary Create a new post
+// @Description Create a new post by an authenticated user
+// @Tags Posts
+// @Accept json
+// @Produce json
+// @Param post body models.Post true "Post object that needs to be created"
+// @Success 201 {object} models.Post "Newly created post"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Failed to create post"
+// @Router /api/v1/restricted/posts [post]
 func CreatePost(c echo.Context) error {
 	request := new(models.Post)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {

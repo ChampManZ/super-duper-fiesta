@@ -1,6 +1,7 @@
 basePath: /
 definitions:
   models.Comment:
+    description: Represents a comment made by users
     properties:
       commentID:
         type: integer
@@ -18,6 +19,7 @@ definitions:
         type: array
     type: object
   models.CommentUser:
+    description: Represents the many-to-many relationship between comments and users
     properties:
       commentID:
         description: Composite primary key
@@ -27,19 +29,16 @@ definitions:
         type: integer
     type: object
   models.CreateUserRequest:
+    description: Request model for creating a user
     properties:
       email:
         type: string
       firstname:
-        maxLength: 32
-        minLength: 2
         type: string
       password:
         minLength: 8
         type: string
       surname:
-        maxLength: 32
-        minLength: 2
         type: string
       username:
         maxLength: 32
@@ -52,7 +51,45 @@ definitions:
     - surname
     - username
     type: object
+  models.GetMigrationListRequest:
+    description: Response model for retrieving migration information
+    properties:
+      migration_id:
+        type: string
+      migration_title:
+        type: string
+    type: object
+  models.GetPublicPostsRequest:
+    description: Response model for retrieving public posts
+    properties:
+      firstname:
+        type: string
+      post_created_at:
+        type: string
+      post_id:
+        type: integer
+      post_message:
+        type: string
+      post_updated_at:
+        type: string
+      surname:
+        type: string
+      username:
+        type: string
+    type: object
+  models.LoginUserRequest:
+    description: Request model for user login
+    properties:
+      identifier:
+        type: string
+      password:
+        type: string
+    required:
+    - identifier
+    - password
+    type: object
   models.Post:
+    description: Represents a post created by a user
     properties:
       createdAt:
         type: string
@@ -70,7 +107,39 @@ definitions:
       userID:
         type: integer
     type: object
+  models.RunMigrationRequest:
+    description: Request model for running a migration
+    properties:
+      migration_id:
+        type: string
+    type: object
+  models.UpdateUserPasswordRequest:
+    description: Request model for updating a user's password
+    properties:
+      password:
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
+  models.UpdateUserRequest:
+    description: Request model for updating user information
+    properties:
+      firstname:
+        type: string
+      surname:
+        type: string
+      username:
+        maxLength: 32
+        minLength: 3
+        type: string
+    required:
+    - firstname
+    - surname
+    - username
+    type: object
   models.User:
+    description: Represents a user with associated posts and comments
     properties:
       comments:
         description: Many-to-Many relationship (has many) | One user can have many
@@ -81,6 +150,8 @@ definitions:
       email:
         type: string
       firstname:
+        type: string
+      is_admin:
         type: string
       posts:
         description: One-to-Many relationship (has many) | One user can have many
@@ -106,7 +177,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Check if the server is running
+      description: Check if the server is running and responsive
       produces:
       - application/json
       responses:
@@ -114,9 +185,404 @@ paths:
           description: Server is running
           schema:
             type: string
-      summary: Health check
+      summary: Perform a health check on the server
       tags:
-      - healthcheck
+      - HealthCheck
+  /admin/main:
+    get:
+      consumes:
+      - application/json
+      description: This is the main admin page accessible only to authenticated users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Welcome to the admin page
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Admin main page
+      tags:
+      - admin
+  /api/v1/admin/get-migrations:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all available migrations with their titles and descriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of migrations
+          schema:
+            items:
+              $ref: '#/definitions/models.GetMigrationListRequest'
+            type: array
+        "500":
+          description: Failed to load migrations
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Retrieve all available migrations
+      tags:
+      - Migrations
+  /api/v1/admin/run-migrations:
+    post:
+      consumes:
+      - application/json
+      description: Execute a specific database migration identified by its ID
+      parameters:
+      - description: Migration ID to run
+        in: body
+        name: migration_id
+        required: true
+        schema:
+          $ref: '#/definitions/models.RunMigrationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Migration ran successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Migration not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error running migration
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Execute a migration
+      tags:
+      - Migrations
+  /api/v1/admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all users or a specific user if User ID is provided in
+        the query parameter
+      parameters:
+      - description: User ID
+        in: query
+        name: uid
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Details of a specific user
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to retrieve users
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all users or a specific user by ID
+      tags:
+      - Users
+  /api/v1/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return a JWT token
+      parameters:
+      - description: User login details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful, token returned
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid username, email, or password
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to generate token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Log in a user
+      tags:
+      - Users
+  /api/v1/logout:
+    post:
+      consumes:
+      - application/json
+      description: This route logs out the user by clearing the JWT cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout user by clearing cookie
+      tags:
+      - logout
+  /api/v1/posts:
+    get:
+      consumes:
+      - application/json
+      description: Get all posts with associated user details (username, firstname,
+        surname)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts with user details
+          schema:
+            items:
+              $ref: '#/definitions/models.GetPublicPostsRequest'
+            type: array
+        "500":
+          description: Failed to retrieve posts
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Retrieve all posts
+      tags:
+      - Posts
+  /api/v1/restricted/main:
+    get:
+      consumes:
+      - application/json
+      description: This route is restricted and requires a valid JWT token to access
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Welcome [username]!
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Restricted route with JWT authentication
+      tags:
+      - restricted
+  /api/v1/restricted/posts:
+    post:
+      consumes:
+      - application/json
+      description: Create a new post by an authenticated user
+      parameters:
+      - description: Post object that needs to be created
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/models.Post'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Newly created post
+          schema:
+            $ref: '#/definitions/models.Post'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to create post
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new post
+      tags:
+      - Posts
+  /api/v1/restricted/users-update-password/{uid}:
+    put:
+      consumes:
+      - application/json
+      description: Change the password of an existing user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New password
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUserPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to update password
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Change a user's password
+      tags:
+      - Users
+  /api/v1/restricted/users/{uid}:
+    put:
+      consumes:
+      - application/json
+      description: Update the details of an existing user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated user details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated user details
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to update user
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an existing user
+      tags:
+      - Users
+  /api/v1/users:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with the provided details
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Newly created user details
+          schema:
+            $ref: '#/definitions/models.User'
+        "409":
+          description: Username or email already exists
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to create user
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new user
+      tags:
+      - Users
   /comments:
     get:
       consumes:
@@ -147,93 +613,34 @@ paths:
       summary: Get all user comments
       tags:
       - commentUser
-  /posts:
+  /cookie-page:
     get:
       consumes:
       - application/json
-      description: Get all posts
+      description: This page is used for debugging cookies
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Welcome to the cookie page
           schema:
-            $ref: '#/definitions/models.Post'
-      summary: Get all posts
+            type: string
+      summary: Cookie debug page
       tags:
-      - posts
-  /users:
+      - debug
+  /jwt-page:
     get:
       consumes:
       - application/json
-      description: Get all users
-      parameters:
-      - description: User ID
-        in: query
-        name: userid
-        type: integer
+      description: This page is used for debugging JWT tokens
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Welcome to the JWT page
           schema:
-            $ref: '#/definitions/models.User'
-        "404":
-          description: User not found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Failed to retrieve users
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get all users
+            type: string
+      summary: JWT debug page
       tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      description: Create single user
-      parameters:
-      - description: User object that needs to be created
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Create single user
-      tags:
-      - users
-  /users/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Update single user
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Update single user
-      tags:
-      - users
+      - debug
 swagger: "2.0"

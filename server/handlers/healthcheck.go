@@ -7,9 +7,9 @@ import (
 )
 
 // HealthCheck godoc
-// @Summary Health check
-// @Description Check if the server is running
-// @Tags healthcheck
+// @Summary Perform a health check on the server
+// @Description Check if the server is running and responsive
+// @Tags HealthCheck
 // @Accept json
 // @Produce json
 // @Success 200 {string} string "Server is running"
