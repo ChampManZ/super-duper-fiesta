@@ -16,28 +16,25 @@ import (
 // @Tags comments
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.Comment
-// @Router /comments [get]
+// @Success 200 {array} models.Comment
+// @Failure 500 {object} map[string]string "Failed to retrieve comments"
+// @Router /api/v1/admin/comments [get]
 func GetComments(c echo.Context) error {
 	var comments []models.Comment
 	config.DB.Find(&comments)
 	return c.JSON(http.StatusOK, comments)
 }
 
-// GetCommentUser godoc
-// @Summary Get all user comments
-// @Description Get all user comments
-// @Tags commentUser
+// PostComment godoc
+// @Summary Create a comment
+// @Description Create a new comment
+// @Tags comments
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.CommentUser
-// @Router /commentuser [get]
-func GetCommentUser(c echo.Context) error {
-	var commentUser []models.CommentUser
-	config.DB.Find(&commentUser)
-	return c.JSON(http.StatusOK, commentUser)
-}
-
+// @Param comment body models.Comment true "Comment object that needs to be created"
+// @Success 201 {object} models.Comment
+// @Failure 400 {object} map[string]string "Invalid input or failed to create comment"
+// @Router /api/v1/restricted/comments [post]
 func PostComment(c echo.Context) error {
 	request := new(models.Comment)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {

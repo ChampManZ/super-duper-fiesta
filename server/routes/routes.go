@@ -48,9 +48,6 @@ func SetupRoutes(e *echo.Echo) {
 	// Comments
 	admin.GET("/comments", handlers.GetComments) // GET /api/v1/admin/comments
 
-	// ComentUser
-	admin.GET("/commentuser", handlers.GetCommentUser) // GET /api/v1/admin/commentuser (Retrieve comment-user associations)
-
 	//------------------------ Cookie (For debug) ------------------------//
 	cookie := api.Group("/cookie")
 	cookie.Use(handlers.CookieChecker)
