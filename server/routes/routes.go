@@ -41,6 +41,7 @@ func SetupRoutes(e *echo.Echo) {
 
 	// Users
 	admin.GET("/users", handlers.GetUsers)               // GET /api/v1/admin/users (Retrieve all users)
+	admin.GET("/users/:uid", handlers.GetUsers)          // GET /api/v1/admin/users/:uid (Retrieve a user by ID)
 	admin.GET("/get-migrations", handlers.GetMigration)  // GET /api/v1/admin/get-migrations (Retrieve all migrations)
 	admin.POST("/run-migrations", handlers.RunMigration) // POST /api/v1/admin/run-migrations (Run migrations)
 
@@ -67,7 +68,8 @@ func SetupRoutes(e *echo.Echo) {
 	jwt_protected.GET("/main", handlers.RestrictedHandler) // GET /api/v1/restricted/main
 
 	// User routes
-	jwt_protected.PUT("/users/:uid", handlers.UpdateUser) // PUT /api/v1/restricted/users/:uid (Update a user by ID)
+	jwt_protected.PUT("/users/:uid", handlers.UpdateUser)                     // PUT /api/v1/restricted/users/:uid (Update a user by ID)
+	jwt_protected.PUT("/users-update-password/:uid", handlers.ChangePassword) // PUT /api/v1/restricted/users-update-password/:uid (Update a user's password by ID)
 
 	// Post routes
 	jwt_protected.POST("/posts", handlers.CreatePost) // POST /api/v1/restricted/posts (Create a new post)

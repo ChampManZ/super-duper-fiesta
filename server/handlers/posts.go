@@ -20,7 +20,7 @@ import (
 // @Router /posts [get]
 func GetPosts(c echo.Context) error {
 	var posts []models.GetPublicPostsRequest
-	if result := config.DB.Table("posts").Select("posts.post_id, users.username, posts.message, posts.created_at, posts.updated_at").Joins("inner join users on users.user_id = posts.user_id").Scan(&posts); result.Error != nil {
+	if result := config.DB.Table("posts").Select("posts.post_id, users.username, users.firstname, users.surname, posts.message, posts.created_at, posts.updated_at").Joins("inner join users on users.user_id = posts.user_id").Scan(&posts); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to get posts"})
 	}
 

@@ -12,9 +12,11 @@ func GenerateJWTToken(user models.User) (string, error) {
 	// Best standard is to have a standard claim as another object
 	// Reference: https://pkg.go.dev/github.com/golang-jwt/jwt/v5#NewWithClaims
 	claims := models.JWTClaims{
-		UserID:   user.UserID,
-		Username: user.Username,
-		Admin:    user.IsAdmin,
+		UserID:    user.UserID,
+		Username:  user.Username,
+		Firstname: user.Firstname,
+		Surname:   user.Surname,
+		Admin:     user.IsAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		},

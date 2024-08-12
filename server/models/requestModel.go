@@ -20,7 +20,10 @@ type UpdateUserRequest struct {
 	Username  string `json:"username" validate:"required,min=3,max=32"`
 	Firstname string `json:"firstname" validate:"required"`
 	Surname   string `json:"surname" validate:"required"`
-	Password  string `json:"password,omitempty" validate:"required,min=8"`
+}
+
+type UpdateUserPasswordRequest struct {
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 type LoginUserRequest struct {
@@ -29,15 +32,19 @@ type LoginUserRequest struct {
 }
 
 type JWTClaims struct {
-	UserID   uint   `json:"uid"`
-	Username string `json:"username"`
-	Admin    string `json:"admin"`
+	UserID    uint   `json:"uid"`
+	Username  string `json:"username"`
+	Firstname string `json:"firstname"`
+	Surname   string `json:"surname"`
+	Admin     string `json:"admin"`
 	jwt.RegisteredClaims
 }
 
 type GetPublicPostsRequest struct {
 	PostID    uint      `json:"post_id"`
 	Username  string    `json:"username"`
+	Firstname string    `json:"firstname"`
+	Surname   string    `json:"surname"`
 	Message   string    `json:"post_message"`
 	CreatedAt time.Time `json:"post_created_at"`
 	UpdatedAt time.Time `json:"post_updated_at"`

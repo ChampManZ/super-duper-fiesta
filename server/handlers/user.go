@@ -173,7 +173,7 @@ func UpdateUser(c echo.Context) error {
 	}
 
 	var user models.User
-	if result := config.DB.First(&user, userID); result.Error != nil {
+	if result := config.DB.Where("user_id = ?", userID).First(&user); result.Error != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
 	}
 
@@ -182,6 +182,37 @@ func UpdateUser(c echo.Context) error {
 	user.Firstname = request.Firstname
 	user.Surname = request.Surname
 
+	updatedStruct := map[string]interface{}{
+		"username":  user.Username,
+		"firstname": user.Firstname,
+		"surname":   user.Surname,
+	}
+
+	// Save changes
+	if result := config.DB.Model(&user).Updates(updatedStruct); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update user"})
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
+
+func ChangePassword(c echo.Context) error {
+	request := new(models.UpdateUserPasswordRequest)
+	if err := helpers.BindAndValidateRequest(c, request); err != nil {
+		return err
+	}
+
+	userIDParam := c.Param("uid")
+	userID, err := strconv.Atoi(userIDParam)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+	}
+
+	var user models.User
+	if result := config.DB.First(&user, userID); result.Error != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
+	}
+
 	// Handle Password change separately by checking if password is provided in the request
 	if request.Password != "" {
 		hashedPassword, err := helpers.HashPassword(request.Password)
@@ -189,14 +220,19 @@ func UpdateUser(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to hash password"})
 		}
 		user.Password = hashedPassword
+	} else {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Password is required"})
 	}
 
-	// Save changes
-	if result := config.DB.Save(&user); result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update user"})
+	updatedStruct := map[string]interface{}{
+		"password": user.Password,
 	}
 
-	return c.JSON(http.StatusOK, user)
+	if result := config.DB.Model(&user).Updates(updatedStruct); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update password"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Password updated successfully"})
 }
 
 // References: https://pkg.go.dev/golang.org/x/crypto/bcrypt
