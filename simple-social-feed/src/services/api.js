@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { ADMIN_USERNAME, ADMIN_PASSWORD } from './constant'
 
 const API_BASE_URL = 'http://localhost:1323/api'
 
@@ -25,4 +26,23 @@ export const getPosts = () => {
 export const logoutUser = () => {
     localStorage.removeItem('token')
     return axios.post(`${API_BASE_URL}/v1/logout`)
+}
+
+export const accessProtectedRoute = () => {
+    // eslint-disable-next-line no-sequences
+    return `${API_BASE_URL}/v1/admin/main`, {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Basic ' + btoa(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`)
+        }
+    }
+}
+
+export const adminMigration = () => {
+    return axios.post(`${API_BASE_URL}/v1/admin/run-migrations`, {}, {
+        auth: {
+            username: ADMIN_USERNAME,
+            password: ADMIN_PASSWORD
+        }
+    })
 }

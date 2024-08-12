@@ -7,6 +7,7 @@ toolchain go1.22.6
 require (
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo-jwt/v4 v4.2.0
 	github.com/labstack/echo/v4 v4.12.0

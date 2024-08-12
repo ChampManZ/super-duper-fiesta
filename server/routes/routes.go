@@ -40,8 +40,8 @@ func SetupRoutes(e *echo.Echo) {
 	admin.GET("/main", handlers.MainAdminPage) // GET /api/v1/admin/main (Main admin page)
 
 	// Users
-	admin.GET("/users", handlers.GetUsers) // GET /api/v1/admin/users (Retrieve all users)
-	// TODO: Update operation for admin only
+	admin.GET("/users", handlers.GetUsers)               // GET /api/v1/admin/users (Retrieve all users)
+	admin.POST("/run-migrations", handlers.RunMigration) // POST /api/v1/admin/run-migrations (Run migrations)
 
 	// Comments
 	admin.GET("/comments", handlers.GetComments) // GET /api/v1/admin/comments
