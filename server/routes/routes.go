@@ -25,6 +25,7 @@ func SetupRoutes(e *echo.Echo) {
 	api.POST("/logout", handlers.Logout)      // POST /api/v1/logout
 	api.POST("/users", handlers.CreateUser)   // POST /api/v1/users
 	api.GET("/posts", handlers.GetPosts)      // GET /api/v1/posts
+	api.GET("/posts/:pid", handlers.GetPosts) // GET /api/v1/posts/:pid
 
 	//------------------------ Admin routes ------------------------//
 	admin := api.Group("/admin")
@@ -64,5 +65,5 @@ func SetupRoutes(e *echo.Echo) {
 	jwt_protected.POST("/posts", handlers.CreatePost) // POST /api/v1/restricted/posts (Create a new post)
 
 	// Comment routes
-	jwt_protected.POST("/comments", handlers.PostComment) // POST /api/v1/restricted/comments (Create a new comment)
+	jwt_protected.POST("/comments", handlers.CreateComment) // POST /api/v1/restricted/comments (Create a new comment)
 }

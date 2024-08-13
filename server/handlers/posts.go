@@ -5,6 +5,7 @@ import (
 	"server/config"
 	"server/helpers"
 	"server/models"
+	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -20,6 +21,22 @@ import (
 // @Failure 500 {object} map[string]string "Failed to retrieve posts"
 // @Router /api/v1/posts [get]
 func GetPosts(c echo.Context) error {
+	postID := c.QueryParam("pid")
+
+	if postID != "" {
+		postID, err := strconv.Atoi(postID)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+		}
+
+		var post models.Post
+		if result := config.DB.First(&post, postID); result.Error != nil {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Post not found"})
+		}
+
+		return c.JSON(http.StatusOK, post)
+	}
+
 	var posts []models.GetPublicPostsRequest
 	if result := config.DB.Table("posts").Select("posts.post_id, users.username, users.firstname, users.surname, posts.message, posts.created_at, posts.updated_at").Joins("inner join users on users.user_id = posts.user_id").Scan(&posts); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to get posts"})

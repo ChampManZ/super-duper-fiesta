@@ -35,7 +35,7 @@ func GetComments(c echo.Context) error {
 // @Success 201 {object} models.Comment
 // @Failure 400 {object} map[string]string "Invalid input or failed to create comment"
 // @Router /api/v1/restricted/comments [post]
-func PostComment(c echo.Context) error {
+func CreateComment(c echo.Context) error {
 	request := new(models.Comment)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {
 		return err
