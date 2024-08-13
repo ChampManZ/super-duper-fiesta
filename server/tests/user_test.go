@@ -1,21 +1,45 @@
 package tests
 
 import (
-	"os"
-	"strings"
-	"testing"
-
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/mail"
+	"os"
 	"reflect"
 	"server/handlers"
 	"server/helpers"
 	"server/models"
+	"strings"
+	"testing"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
+
+func GenerateNewUser(t *testing.T) {
+	e := echo.New()
+	e.Validator = helpers.NewValidator()
+
+	userJSON := `{"username":"testuser","firstname":"Test","surname":"User","email":"test@example.com","password":"password123"}`
+	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(userJSON))
+	createReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	createRec := httptest.NewRecorder()
+	createCtx := e.NewContext(createReq, createRec)
+
+	if assert.NoError(t, handlers.CreateUser(createCtx)) {
+		assert.Equal(t, http.StatusCreated, createRec.Code)
+	}
+
+	var createdUser models.User
+	err := json.Unmarshal(createRec.Body.Bytes(), &createdUser)
+	if err != nil {
+		fmt.Println("Failed to unmarshal created user")
+	} else {
+		fmt.Printf("Created User ID: %d\n", createdUser.UserID) // Created User ID: 1 | Gorm auto increments the ID starting from 1
+	}
+}
 
 // ----------- Model Testing ----------- //
 func TestUserModel(t *testing.T) {
@@ -265,15 +289,28 @@ func TestLoginUserByUsername(t *testing.T) {
 	e := echo.New()
 	e.Validator = helpers.NewValidator()
 
-	userJSON := `{"username":"testuser","firstname":"Test","surname":"User","email":"test@example.com","password":"password123"}`
-	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(userJSON))
-	createReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	createRec := httptest.NewRecorder()
-	createC := e.NewContext(createReq, createRec)
+	GenerateNewUser(t)
 
-	if assert.NoError(t, handlers.CreateUser(createC)) {
-		assert.Equal(t, http.StatusCreated, createRec.Code)
+	loginJSON := `{"identifier":"testuser","password":"password123"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/login", strings.NewReader(loginJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if assert.NoError(t, handlers.LoggedInUser(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "token")
 	}
+}
+
+func TestLoginUserByEmail(t *testing.T) {
+	createTables()
+	defer teardown()
+
+	e := echo.New()
+	e.Validator = helpers.NewValidator()
+
+	GenerateNewUser(t)
 
 	loginJSON := `{"identifier":"testuser","password":"password123"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/login", strings.NewReader(loginJSON))
@@ -286,31 +323,23 @@ func TestLoginUserByUsername(t *testing.T) {
 	}
 }
 
-func TestLoginUserByEmail(t *testing.T) {
+func TestLogout(t *testing.T) {
 	createTables()
 	defer teardown()
 
 	e := echo.New()
 	e.Validator = helpers.NewValidator()
 
-	userJSON := `{"username":"testuser","firstname":"Test","surname":"User","email":"test@example.com","password":"password123"}`
-	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(userJSON))
-	createReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	createRec := httptest.NewRecorder()
-	createC := e.NewContext(createReq, createRec)
+	GenerateNewUser(t)
 
-	if assert.NoError(t, handlers.CreateUser(createC)) {
-		assert.Equal(t, http.StatusCreated, createRec.Code)
-	}
+	logoutReq := httptest.NewRequest(http.MethodPost, "/api/v1/logout", nil)
+	logoutReq.Header.Set("auth", "username=testuser, password=password123")
+	logoutRec := httptest.NewRecorder()
+	logoutC := e.NewContext(logoutReq, logoutRec)
 
-	loginJSON := `{"identifier":"testuser","password":"password123"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/login", strings.NewReader(loginJSON))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-
-	if assert.NoError(t, handlers.LoggedInUser(c)) {
-		assert.Equal(t, http.StatusOK, rec.Code)
+	if assert.NoError(t, handlers.Logout(logoutC)) {
+		assert.Equal(t, http.StatusOK, logoutRec.Code)
+		assert.Contains(t, logoutRec.Body.String(), "Logout successful")
 	}
 }
 
@@ -328,6 +357,240 @@ func TestGetUsers(t *testing.T) {
 
 	if assert.NoError(t, handlers.GetUsers(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+}
 
+func TestGetUsersByID(t *testing.T) {
+	mockUser := models.User{
+		Username:  "testuser",
+		Firstname: "Test",
+		Surname:   "User",
+		Email:     "test@example.com",
+		IsAdmin:   "0",
+	}
+
+	createTables()
+	defer teardown()
+
+	e := echo.New()
+	e.Validator = helpers.NewValidator()
+
+	GenerateNewUser(t)
+
+	uid := "1"
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/admin/users/:uid", nil)
+	getReq.Header.Set("auth", "username="+os.Getenv("ADMIN_USERNAME")+", password="+os.Getenv("ADMIN_PASSWORD")) // Set admin credentials
+	getRec := httptest.NewRecorder()
+	getCtx := e.NewContext(getReq, getRec)
+	getCtx.SetParamNames("uid")
+	getCtx.SetParamValues(uid)
+
+	if assert.NoError(t, handlers.GetUsers(getCtx)) {
+		assert.Equal(t, http.StatusOK, getRec.Code)
+
+		var responseBody interface{}
+		err := json.Unmarshal(getRec.Body.Bytes(), &responseBody)
+		assert.NoError(t, err)
+
+		switch val := responseBody.(type) {
+		case []interface{}:
+			for _, element := range val {
+				if userMap, ok := element.(map[string]interface{}); ok {
+					assert.Equal(t, mockUser.Username, userMap["username"])
+					assert.Equal(t, mockUser.Firstname, userMap["firstname"])
+					assert.Equal(t, mockUser.Surname, userMap["surname"])
+					assert.Equal(t, mockUser.Email, userMap["Email"])
+					assert.Equal(t, mockUser.IsAdmin, userMap["is_admin"])
+				} else {
+					panic("Failed test")
+				}
+			}
+		case map[string]interface{}:
+			t.Errorf("Unexpected JSON structure: expected object, got array")
+		default:
+			t.Errorf("Unknown JSON structure")
+		}
+	}
+}
+
+func TestUpdateUser(t *testing.T) {
+
+	e := echo.New()
+	e.Validator = helpers.NewValidator()
+
+	mockUpdateUserRequest := models.UpdateUserRequest{
+		Username:  "newuser",
+		Firstname: "New",
+		Surname:   "User",
+	}
+
+	testCase := []struct {
+		name           string
+		userID         string
+		body           models.UpdateUserRequest
+		expectedStatus int
+		expectedError  string
+	}{
+		{
+			name:           "Invalid User ID",
+			userID:         "abc",
+			body:           mockUpdateUserRequest,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "Invalid input",
+		},
+		{
+			name:           "Valid User",
+			userID:         "1",
+			body:           mockUpdateUserRequest,
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "User not found",
+			userID:         "2",
+			body:           mockUpdateUserRequest,
+			expectedStatus: http.StatusNotFound,
+			expectedError:  `User not found`,
+		},
+		{
+			name:   "Empty Username",
+			userID: "1",
+			body: models.UpdateUserRequest{
+				Username:  "",
+				Firstname: "New",
+				Surname:   "User",
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  `Error:Field validation for 'Username' failed on the 'required' tag`,
+		},
+		{
+			name:   "Empty Firstname",
+			userID: "1",
+			body: models.UpdateUserRequest{
+				Username:  "NewUser",
+				Firstname: "",
+				Surname:   "User",
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  `Error:Field validation for 'Firstname' failed on the 'required' tag`,
+		},
+		{
+			name:   "Empty Surname",
+			userID: "1",
+			body: models.UpdateUserRequest{
+				Username:  "NewUser",
+				Firstname: "New",
+				Surname:   "",
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  `Error:Field validation for 'Surname' failed on the 'required' tag`,
+		},
+	}
+
+	for _, tt := range testCase {
+		t.Run(tt.name, func(t *testing.T) {
+
+			createTables()
+			defer teardown()
+
+			GenerateNewUser(t)
+
+			reqBody, _ := json.Marshal(tt.body)
+			req := httptest.NewRequest(http.MethodPut, "/api/v1/restricted/users/"+tt.userID, strings.NewReader(string(reqBody)))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/api/v1/restricted/users/:uid")
+			c.SetParamNames("uid")
+			c.SetParamValues(tt.userID)
+
+			err := handlers.UpdateUser(c)
+
+			if err != nil {
+				e.HTTPErrorHandler(err, c)
+			}
+
+			assert.Equal(t, tt.expectedStatus, rec.Code)
+			if tt.expectedError != "" {
+				assert.Contains(t, rec.Body.String(), tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestUpdateUserPassword(t *testing.T) {
+	e := echo.New()
+	e.Validator = helpers.NewValidator()
+
+	mockUpdatePasswordRequest := models.UpdateUserPasswordRequest{
+		Password: "newpassword123",
+	}
+
+	testCase := []struct {
+		name           string
+		userID         string
+		body           models.UpdateUserPasswordRequest
+		expectedStatus int
+		expectedError  string
+	}{
+		{
+			name:           "Invalid User ID",
+			userID:         "abc",
+			body:           mockUpdatePasswordRequest,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  `Invalid input`,
+		},
+		{
+			name:           "User not found",
+			userID:         "2",
+			body:           mockUpdatePasswordRequest,
+			expectedStatus: http.StatusNotFound,
+			expectedError:  `User not found`,
+		},
+		{
+			name:           "Valid User",
+			userID:         "1",
+			body:           mockUpdatePasswordRequest,
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:   "Empty String Password",
+			userID: "1",
+			body: models.UpdateUserPasswordRequest{
+				Password: "",
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  `Error:Field validation for 'Password' failed on the 'required' tag`,
+		},
+	}
+
+	for _, tt := range testCase {
+		t.Run(tt.name, func(t *testing.T) {
+
+			createTables()
+			defer teardown()
+
+			GenerateNewUser(t)
+
+			reqBody, _ := json.Marshal(tt.body)
+			req := httptest.NewRequest(http.MethodPut, "/api/v1/restricted/users-update-password/"+tt.userID, strings.NewReader(string(reqBody)))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/api/v1/restricted/users-update-password/:uid")
+			c.SetParamNames("uid")
+			c.SetParamValues(tt.userID)
+
+			err := handlers.ChangePassword(c)
+
+			if err != nil {
+				e.HTTPErrorHandler(err, c)
+			}
+
+			assert.Equal(t, tt.expectedStatus, rec.Code)
+			if tt.expectedError != "" {
+				assert.Contains(t, rec.Body.String(), tt.expectedError)
+			}
+		})
 	}
 }

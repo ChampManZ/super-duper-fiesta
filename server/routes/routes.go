@@ -3,6 +3,7 @@ package routes
 import (
 	"os"
 	"server/handlers"
+	"server/helpers"
 	"server/models"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -31,22 +32,13 @@ func SetupRoutes(e *echo.Echo) {
 		Format: `${time_rfc3339} ${status} ${method} ${host}${path} ${latency_human}` + "\n",
 	}
 	admin.Use(middleware.LoggerWithConfig(loggerConfig))
-	admin.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		if username == os.Getenv("ADMIN_USERNAME") && password == os.Getenv("ADMIN_PASSWORD") {
-			return true, nil
-		}
-		return false, nil
-	}))
-	admin.GET("/main", handlers.MainAdminPage) // GET /api/v1/admin/main (Main admin page)
-
-	// Users
+	admin.Use(helpers.CustomBasicAuth)
+	admin.GET("/main", handlers.MainAdminPage)           // GET /api/v1/admin/main (Main admin page)
 	admin.GET("/users", handlers.GetUsers)               // GET /api/v1/admin/users (Retrieve all users)
 	admin.GET("/users/:uid", handlers.GetUsers)          // GET /api/v1/admin/users/:uid (Retrieve a user by ID)
 	admin.GET("/get-migrations", handlers.GetMigration)  // GET /api/v1/admin/get-migrations (Retrieve all migrations)
 	admin.POST("/run-migrations", handlers.RunMigration) // POST /api/v1/admin/run-migrations (Run migrations)
-
-	// Comments
-	admin.GET("/comments", handlers.GetComments) // GET /api/v1/admin/comments
+	admin.GET("/comments", handlers.GetComments)         // GET /api/v1/admin/comments
 
 	//------------------------ Cookie (For debug) ------------------------//
 	cookie := api.Group("/cookie")
