@@ -10,6 +10,7 @@ function UserProfilePage() {
     let { username } = useParams()
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [uid, setUid] = useState(null)
+    const [currentUsername, setCurrentUsername] = useState('')
 
     useEffect(() => {
         const token = localStorage.getItem('token')
@@ -19,6 +20,7 @@ function UserProfilePage() {
                 console.log("Decoded token:", decodedToken)
                 setUid(decodedToken.uid)
                 setIsLoggedIn(true)
+                setCurrentUsername(decodedToken.username)
             } catch (error) {
                 console.error("Error decoding token:", error)
                 setIsLoggedIn(false)
@@ -28,7 +30,7 @@ function UserProfilePage() {
         }
     }, [])
 
-    const isCurrentUserProfile = username === jwtDecode(localStorage.getItem('token')).username
+    const isCurrentUserProfile = username === currentUsername
 
     return (
         <div>
@@ -40,7 +42,7 @@ function UserProfilePage() {
                 </div>
                 ) : (
                 <div>
-                    <h4>Join the fun now!</h4>
+                    <h4>{username}, you're not logging in. Join the fun now!</h4>
                     <ButtonLink text="Login" href="/login" />
                     <ButtonLink text="Register" href="/register" />
                 </div> 
