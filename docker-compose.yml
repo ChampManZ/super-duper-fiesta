@@ -1,24 +1,32 @@
-version: '3.8'
-
 services:
-  mysql:
+  db:
     image: mysql:latest
     container_name: dwtakehome-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}          # Root password
-      MYSQL_DATABASE: ${DB_NAME}            # Your database name
-      MYSQL_USER: ${DB_USERNAME}                # Your MySQL user
-      MYSQL_PASSWORD: ${DB_PASSWORD}               # MySQL user password
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}      
+      MYSQL_DATABASE: ${DB_NAME}        
+      MYSQL_USER: ${DB_USERNAME}             
+      MYSQL_PASSWORD: ${DB_PASSWORD}            
     ports:
-      - "3306:3306"                         # Map host port 3306 to container port 3306
+      - "3306:3306"                        
     volumes:
-      - mysql_data:/var/lib/mysql           # Persist data between container restarts
-      - ./create_database.sql:/docker-entrypoint-initdb.d/create_database.sql  # Create database on container start
-    networks:
-      - mysql_network
+      - mysql_data:/var/lib/mysql      
+      - ./create_database.sql:/docker-entrypoint-initdb.d/create_database.sql
+
+
+  db_mock:
+    image: mysql:latest
+    container_name: dwtakehome_mock_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME_MOCK}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_mock_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
 
 volumes:
   mysql_data:
-
-networks:
-  mysql_network:
+  db_mock_data:
