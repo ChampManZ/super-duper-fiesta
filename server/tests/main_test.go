@@ -15,6 +15,15 @@ import (
 	"gorm.io/gorm"
 )
 
+func RollbackFunc(model interface{}) {
+	config.DB.Begin()
+	defer config.DB.Rollback()
+
+	if model != nil {
+		config.DB.Save(&model)
+	}
+}
+
 func setupTestDB() *gorm.DB {
 	rootDir := filepath.Join("../../.env.test.local")
 	err := godotenv.Load(rootDir)
@@ -41,6 +50,9 @@ func setupTestDB() *gorm.DB {
 
 func createTables() {
 	config.DB.AutoMigrate(&models.User{})
+	config.DB.AutoMigrate(&models.Post{})
+	config.DB.AutoMigrate(&models.Comment{})
+	config.DB.AutoMigrate(&models.CommentUser{})
 }
 
 func teardown() {

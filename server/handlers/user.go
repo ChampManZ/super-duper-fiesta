@@ -64,7 +64,7 @@ func GetUsers(c echo.Context) error {
 func LoggedInUser(c echo.Context) error {
 	request := new(models.LoginUserRequest)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+		return err
 	}
 
 	var user models.User
@@ -146,7 +146,7 @@ func CreateUser(c echo.Context) error {
 	}
 
 	if result := config.DB.Create(&user); result.Error != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Error: Failed to create user. Please try again"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Error: Failed to create user. Please try again"})
 	}
 
 	return c.JSON(http.StatusCreated, user)

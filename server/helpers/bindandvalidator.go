@@ -24,13 +24,14 @@ func NewValidator() *CustomValidator {
 
 func BindAndValidateRequest(c echo.Context, req interface{}) error {
 	// Bind request data
+	// Note: Should return an error instead of JSON failed response
 	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return echo.NewHTTPError(http.StatusBadRequest, map[string]string{"message": "Invalid request data"})
 	}
 
 	// Validate request
 	if err := c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return err
 	}
 
 	return nil
