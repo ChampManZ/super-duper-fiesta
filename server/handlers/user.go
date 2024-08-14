@@ -27,6 +27,7 @@ import (
 // @Router /api/v1/admin/users [get]
 func GetUsers(c echo.Context) error {
 	userID := c.QueryParam("uid")
+	username := c.QueryParam("username")
 
 	if userID != "" {
 		userID, err := strconv.Atoi(userID)
@@ -41,6 +42,16 @@ func GetUsers(c echo.Context) error {
 
 		return c.JSON(http.StatusOK, user)
 	}
+
+	if username != "" {
+		var user models.User
+		if result := config.DB.Where("username = ?", username).First(&user); result.Error != nil {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Username not found"})
+		}
+
+		return c.JSON(http.StatusOK, user)
+	}
+
 	var users []models.User
 	if result := config.DB.Find(&users); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to get users"})

@@ -40,6 +40,7 @@ func SetupRoutes(e *echo.Echo) {
 	admin.GET("/main", handlers.MainAdminPage)           // GET /api/v1/admin/main (Main admin page)
 	admin.GET("/users", handlers.GetUsers)               // GET /api/v1/admin/users (Retrieve all users)
 	admin.GET("/users/:uid", handlers.GetUsers)          // GET /api/v1/admin/users/:uid (Retrieve a user by ID)
+	admin.GET("/users/:username", handlers.GetUsers)     // GET /api/v1/admin/users/:username (Retrieve a user by username)
 	admin.GET("/get-migrations", handlers.GetMigration)  // GET /api/v1/admin/get-migrations (Retrieve all migrations)
 	admin.POST("/run-migrations", handlers.RunMigration) // POST /api/v1/admin/run-migrations (Run migrations)
 

@@ -21,6 +21,10 @@ export const getUser = (uid) => {
     return axios.get(`${API_BASE_URL}/v1/admin/users?uid=${uid}`, ADMIN_HEADER)
 }
 
+export const getUsername = (username) => {
+    return axios.get(`${API_BASE_URL}/v1/admin/users?username=${username}`, ADMIN_HEADER)
+}
+
 export const createPost = (message, token) => {
     return axios.post('http://localhost:1323/api/v1/restricted/posts', { message }, {
         headers: {
