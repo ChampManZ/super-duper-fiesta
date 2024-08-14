@@ -16,8 +16,25 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
+// generate user via GORM, for unit test
+func createTestUser(t *testing.T, db *gorm.DB) *models.User {
+	user := models.User{
+		Username:  "testuser",
+		Firstname: "Test",
+		Surname:   "User",
+		Email:     "test@example.com",
+		Password:  "password",
+	}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+	return &user
+}
+
+// via API, for integration test and also generate user for other tests
 func GenerateNewUser(t *testing.T) {
 	e := echo.New()
 	e.Validator = helpers.NewValidator()

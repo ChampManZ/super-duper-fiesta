@@ -6,14 +6,31 @@ import (
 	"server/config"
 	"server/models"
 	"testing"
+	"time"
 
 	"log"
 	"path/filepath"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	gormSQL "gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
+
+func createJWTTokenTest(t *testing.T, userID uint) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &models.JWTClaims{
+		UserID: uint(userID),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
+	})
+	tokenString, err := token.SignedString([]byte("testing_mock"))
+	if err != nil {
+		t.Fatalf("Failed to create JWT token: %v", err)
+	}
+	return tokenString
+}
 
 func RollbackFunc(model interface{}) {
 	config.DB.Begin()
@@ -40,7 +57,16 @@ func setupTestDB() *gorm.DB {
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", username, password, host, port, database)
 
-	db, err := gorm.Open(gormSQL.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(gormSQL.Open(dsn), &gorm.Config{
+		Logger: logger.New((log.New(os.Stdout, "\r\n", log.LstdFlags)),
+			logger.Config{
+				SlowThreshold:             time.Second,
+				LogLevel:                  logger.Info,
+				IgnoreRecordNotFoundError: true,
+				Colorful:                  true,
+			},
+		),
+	})
 	if err != nil {
 		panic("Failed to connect to database: " + err.Error())
 	}
@@ -49,17 +75,31 @@ func setupTestDB() *gorm.DB {
 }
 
 func createTables() {
-	config.DB.AutoMigrate(&models.User{})
-	config.DB.AutoMigrate(&models.Post{})
-	config.DB.AutoMigrate(&models.Comment{})
-	config.DB.AutoMigrate(&models.CommentUser{})
+	err := config.DB.AutoMigrate(&models.User{})
+	if err != nil {
+		log.Fatalf("Failed to migrate User table: %v", err)
+	}
+	err = config.DB.AutoMigrate(&models.Post{})
+	if err != nil {
+		log.Fatalf("Failed to migrate Post table: %v", err)
+	}
+	err = config.DB.AutoMigrate(&models.Comment{})
+	if err != nil {
+		log.Fatalf("Failed to migrate Comment table: %v", err)
+	}
+	err = config.DB.AutoMigrate(&models.CommentUser{})
+	if err != nil {
+		log.Fatalf("Failed to migrate CommentUser table: %v", err)
+	}
+
+	fmt.Println("Tables migrated successfully")
 }
 
 func teardown() {
 	migrator := config.DB.Migrator()
 	migrator.DropTable(&models.CommentUser{})
-	migrator.DropTable(&models.Post{})
 	migrator.DropTable(&models.Comment{})
+	migrator.DropTable(&models.Post{})
 	migrator.DropTable(&models.User{})
 }
 

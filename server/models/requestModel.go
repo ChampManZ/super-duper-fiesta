@@ -75,3 +75,23 @@ type GetMigrationListRequest struct {
 type RunMigrationRequest struct {
 	MigrationID string `json:"migration_id"`
 }
+
+// GetCommentRequest represents the data needed to get a comment
+// @Description Request model for get a comment
+type GetCommentRequest struct {
+	Username   string `json:"username"`
+	CommentMSG string `json:"comment_msg"`
+}
+
+// CreatePostRequest represents the data needed to create a post
+// @Description Request model for creating a post
+type CreatePostRequest struct {
+	Message string `json:"message" validate:"required"`
+}
+
+// CreateCommentRequest represents the data needed to create a comment
+// @Description Request model for creating a comment
+type CreateCommentRequest struct {
+	PostID     uint   `json:"post_id" validate:"required"`
+	CommentMSG string `json:"comment_msg" validate:"required"`
+}

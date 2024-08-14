@@ -58,7 +58,7 @@ func GetPosts(c echo.Context) error {
 // @Failure 500 {object} map[string]string "Failed to create post"
 // @Router /api/v1/restricted/posts [post]
 func CreatePost(c echo.Context) error {
-	request := new(models.Post)
+	request := new(models.CreatePostRequest)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func CreatePost(c echo.Context) error {
 	}
 
 	if result := config.DB.Create(&post); result.Error != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Failed to create post. Please try again"})
+		result.Debug()
 	}
 
 	return c.JSON(http.StatusCreated, post)

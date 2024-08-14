@@ -27,12 +27,14 @@ CREATE TABLE IF NOT EXISTS posts (
 -- because many-to-many relationship is created by creating a new table that contains the PK of both tables.
 CREATE TABLE IF NOT EXISTS comments(
     comment_id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
     comment_msg TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS CommentUser(
+CREATE TABLE IF NOT EXISTS comment_users(
     comment_id INT NOT NULL,
     user_id INT NOT NULL,
     PRIMARY KEY (comment_id, user_id),

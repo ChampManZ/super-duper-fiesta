@@ -21,11 +21,14 @@ func SetupRoutes(e *echo.Echo) {
 	e.GET("/swagger/*", handlers.SwaggerHandler) // GET /swagger/* (Swagger documentation)
 
 	// Public API Routes
-	api.POST("/login", handlers.LoggedInUser) // POST /api/v1/login
-	api.POST("/logout", handlers.Logout)      // POST /api/v1/logout
-	api.POST("/users", handlers.CreateUser)   // POST /api/v1/users
-	api.GET("/posts", handlers.GetPosts)      // GET /api/v1/posts
-	api.GET("/posts/:pid", handlers.GetPosts) // GET /api/v1/posts/:pid
+	api.POST("/login", handlers.LoggedInUser)       // POST /api/v1/login
+	api.POST("/logout", handlers.Logout)            // POST /api/v1/logout
+	api.POST("/users", handlers.CreateUser)         // POST /api/v1/users
+	api.GET("/posts", handlers.GetPosts)            // GET /api/v1/posts
+	api.GET("/posts/:pid", handlers.GetPosts)       // GET /api/v1/posts/:pid
+	api.GET("/comments/:pid", handlers.GetComments) // GET /api/v1/comments/:pid
+
+	// GET /api/v1/restricted/comments/:pid (Retrieve all comments for a post)
 
 	//------------------------ Admin routes ------------------------//
 	admin := api.Group("/admin")
@@ -39,7 +42,6 @@ func SetupRoutes(e *echo.Echo) {
 	admin.GET("/users/:uid", handlers.GetUsers)          // GET /api/v1/admin/users/:uid (Retrieve a user by ID)
 	admin.GET("/get-migrations", handlers.GetMigration)  // GET /api/v1/admin/get-migrations (Retrieve all migrations)
 	admin.POST("/run-migrations", handlers.RunMigration) // POST /api/v1/admin/run-migrations (Run migrations)
-	admin.GET("/comments", handlers.GetComments)         // GET /api/v1/admin/comments
 
 	//------------------------ Cookie (For debug) ------------------------//
 	cookie := api.Group("/cookie")

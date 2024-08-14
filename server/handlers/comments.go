@@ -5,8 +5,8 @@ import (
 	"server/config"
 	"server/helpers"
 	"server/models"
-	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -20,8 +20,18 @@ import (
 // @Failure 500 {object} map[string]string "Failed to retrieve comments"
 // @Router /api/v1/admin/comments [get]
 func GetComments(c echo.Context) error {
-	var comments []models.Comment
-	config.DB.Find(&comments)
+	postID := c.Param("pid")
+
+	var post models.Post
+	if err := config.DB.First(&post, postID).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Post does not exist"})
+	}
+
+	var comments []models.GetCommentRequest
+	if err := config.DB.Table("comments").Select("users.username, comments.comment_msg").Joins("inner join comment_users on comment_users.comment_id = comments.comment_id").Joins("inner join users on users.user_id = comment_users.user_id").Where("comments.post_id = ?", postID).Scan(&comments).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to get comments"})
+	}
+
 	return c.JSON(http.StatusOK, comments)
 }
 
@@ -36,20 +46,38 @@ func GetComments(c echo.Context) error {
 // @Failure 400 {object} map[string]string "Invalid input or failed to create comment"
 // @Router /api/v1/restricted/comments [post]
 func CreateComment(c echo.Context) error {
-	request := new(models.Comment)
+	request := new(models.CreateCommentRequest)
 	if err := helpers.BindAndValidateRequest(c, request); err != nil {
 		return err
 	}
 
-	// Response to test: { "CommentMSG": "something" }
+	var post models.Post
+	if result := config.DB.First(&post, request.PostID); result.Error != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Post does not exist"})
+	}
+
+	user := c.Get("user")
+	token := user.(*jwt.Token)
+	claims := token.Claims.(*models.JWTClaims)
+
+	userID := claims.UserID
+
 	comment := models.Comment{
+		PostID:     request.PostID,
 		CommentMSG: request.CommentMSG,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
 	}
 
 	if result := config.DB.Create(&comment); result.Error != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Failed to create comment. Please try again"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Failed to create comment"})
+	}
+
+	commentUser := models.CommentUser{
+		CommentID: comment.CommentID,
+		UserID:    userID,
+	}
+
+	if result := config.DB.Create(&commentUser); result.Error != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Failed to create comment and user data"})
 	}
 
 	return c.JSON(http.StatusCreated, comment)

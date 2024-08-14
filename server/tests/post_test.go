@@ -19,34 +19,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func createJWTTokenTest(t *testing.T, userID uint) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &models.JWTClaims{
-		UserID: uint(userID),
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-		},
-	})
-	tokenString, err := token.SignedString([]byte("testing_mock"))
-	if err != nil {
-		t.Fatalf("Failed to create JWT token: %v", err)
-	}
-	return tokenString
-}
-
-func createTestUser(t *testing.T, db *gorm.DB) *models.User {
-	user := models.User{
-		Username:  "testuser",
-		Firstname: "Test",
-		Surname:   "User",
-		Email:     "test@example.com",
-		Password:  "password",
-	}
-	if err := db.Create(&user).Error; err != nil {
-		t.Fatalf("Failed to create test user: %v", err)
-	}
-	return &user
-}
-
 func createTestPost(t *testing.T, db *gorm.DB, user *models.User) *models.Post {
 	post := models.Post{
 		UserID:    user.UserID,
