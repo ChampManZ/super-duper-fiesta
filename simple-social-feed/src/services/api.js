@@ -67,3 +67,18 @@ export const updateUser = (uid, userData, token) => {
         },
     });
 }
+
+export const addComment = (postID, comment, token) => {
+    return axios.post(`${API_BASE_URL}/v1/restricted/comments`, {
+        post_id: postID,
+        comment_msg: comment
+    }, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+}
+
+export const getComment = (postID) => {
+    return axios.get(`${API_BASE_URL}/v1/comments/${postID}`)
+}

@@ -4,7 +4,9 @@ import ButtonLink from "../components/ButtonLink";
 import CreatePostForm from "../components/CreatePostForm";
 import MessageFeed from "../components/MessageFeed";
 import LogoutButton from "../components/LogoutButton";
-import { getPosts } from "../services/api";
+import Comment from "../components/Comment";
+import CommentForm from "../components/CommentForm";
+import { getPosts, getComment } from "../services/api";
 import { jwtDecode } from "jwt-decode";
 
 function FeedPage() {
@@ -58,6 +60,16 @@ function FeedPage() {
         window.location.reload()
     }
 
+    const handleCommentCreated = async (postId) => {
+        try {
+            const response = await getComment(postId)
+            return response.data || []
+        } catch (error) {
+            console.error('Failed to load comments', error)
+            return []
+        }
+    }
+
     if (loading) {
         return <p>Loading feed...</p>
     }
@@ -79,6 +91,8 @@ function FeedPage() {
                             postTime={post.post_created_at ? new Date(post.post_created_at).toLocaleString() : 'Unknown'}
                             message={post.post_message}
                         />
+                        <Comment postID={post.post_id} />
+                        <CommentForm postID={post.post_id} onCommentAdded={(newComment) => handleCommentCreated(post.post_id, newComment)} />
                     </div>
                 ))
             ) : (
