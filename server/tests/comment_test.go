@@ -69,7 +69,7 @@ func TestCreateComment(t *testing.T) {
 		err := json.Unmarshal(rec.Body.Bytes(), &createComment)
 
 		assert.NoError(t, err)
+		assert.Equal(t, "This is a test comment", createComment.CommentMSG)
 		assert.Equal(t, postMock.PostID, createComment.PostID)
-		assert.Equal(t, postMock.Message, createComment.CommentMSG)
 	}
 }
