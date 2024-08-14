@@ -27,6 +27,34 @@ services:
     ports:
       - "3307:3306"
 
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "1323:1323"
+    depends_on:
+      - db
+      - db_mock
+    env_file:
+      - ./.env.docker
+    volumes:
+      - ./server:/app
+
+  client:
+    build:
+      context: ./simple-social-feed
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    env_file:
+      - ./simple-social-feed/.env
+    volumes:
+      - ./simple-social-feed:/app
+    
+
 volumes:
   mysql_data:
   db_mock_data:
